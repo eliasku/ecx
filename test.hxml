@@ -1,0 +1,4 @@
+-cmd open build/test.swf
+-cmd node build/test.js
+-cmd neko build/test.n
+-cmd open build/test-cpp/TestAll-debug

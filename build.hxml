@@ -1,0 +1,23 @@
+-cp src
+-cp test
+-lib utest
+-main ecx.TestAll
+-dce full
+-debug
+
+--each
+
+-swf build/test.swf
+
+--next
+-neko build/test.n
+
+--next
+-js build/test.js
+
+--next
+-cpp build/test-cpp
+
+#--next
+#-php build/test-php
+#--php-front main.php
