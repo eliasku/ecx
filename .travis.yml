@@ -3,10 +3,11 @@ language: haxe
 sudo: false
 
 haxe:
-  - "3.3.0"
+  - "3.2.1"
   - development
 
 install:
+  haxelib install utest
   haxelib dev ecx .
 
 script:
