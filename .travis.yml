@@ -7,8 +7,8 @@ haxe:
   - development
 
 install:
-  haxelib install utest
-  haxelib dev ecx .
+  - haxelib install utest
+  - haxelib dev ecx .
 
 script:
   - haxe build.hxml
