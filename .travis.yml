@@ -1,0 +1,14 @@
+language: haxe
+
+sudo: false
+
+haxe:
+  - "3.3.0"
+  - development
+
+install:
+  haxelib dev ecx .
+
+script:
+  - haxe build.hxml
+  - haxe test.hxml
