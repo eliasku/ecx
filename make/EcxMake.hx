@@ -10,7 +10,7 @@ class EcxMake extends hxmake.Module {
 		config.version = "0.0.1";
 		config.classPath = ["src"];
 		config.testPath = ["test"];
-		config.dependencies = [
+		config.devDependencies = [
 			"utest" => "haxelib"
 		];
 
