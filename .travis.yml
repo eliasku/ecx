@@ -3,13 +3,11 @@ language: haxe
 sudo: false
 
 haxe:
-  - "3.2.1"
-  - development
+  development
 
 install:
   - haxelib install utest
   - haxelib dev ecx .
 
 script:
-  - haxe build.hxml
-  - haxe test.hxml
+  haxe travis.hxml
