@@ -6,8 +6,6 @@ using hxmake.haxelib.HaxelibPlugin;
 class EcxMake extends hxmake.Module {
 
 	function new() {
-		config.description = "ECX entity-component-system framework";
-		config.version = "0.0.1";
 		config.classPath = ["src"];
 		config.testPath = ["test"];
 		config.devDependencies = [
@@ -17,6 +15,12 @@ class EcxMake extends hxmake.Module {
 		apply(HaxelibPlugin);
 		apply(IdeaPlugin);
 
-		library();
+		var cfg = library().config;
+		cfg.version = "0.0.1";
+		cfg.description = "ECX entity-component-system framework";
+		cfg.url = "https://github.com/eliasku/ecx";
+		cfg.tags = ["entity", "component", "system", "ecs", "ces", "cross"];
+		cfg.contributors = ["eliasku"];
+		cfg.license = "MIT";
 	}
 }

@@ -1,8 +1,18 @@
 {
 	"name": "ecx",
+	"license": "https://github.com/eliasku/ecx",
+	"tags": [
+		"entity",
+		"component",
+		"system",
+		"ecs",
+		"ces",
+		"cross"
+	],
 	"classPath": "src",
 	"description": "ECX entity-component-system framework",
-	"contributors": [],
-	"version": "0.0.1",
-	"dependencies": {}
+	"contributors": [
+		"eliasku"
+	],
+	"version": "0.0.1"
 }
