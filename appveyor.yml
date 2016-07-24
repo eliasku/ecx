@@ -5,8 +5,9 @@ environment:
     HAXELIB_ROOT: C:\projects\haxelib
   matrix:
     - TARGET=interp,neko
-    - TARGET=cpp
     - TARGET=flash,js,node
+    - TARGET=cpp
+    - TARGET=cs,java
 
 matrix:
   fast_finish: true

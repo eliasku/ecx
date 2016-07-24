@@ -53,8 +53,7 @@ class Component {
 	}
 
 	@:extern inline function _cast<T:Component>(clazz:Class<T>):T {
-		#if cpp
-		//return cpp.Pointer.addressOf(this).rawCast()[0];
+		#if (cpp && haxe_ver >= 3.3)
 		return cpp.Pointer.fromRaw(cpp.Pointer.addressOf(this).rawCast()).value;
 		#else
 		return cast this;
