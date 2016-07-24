@@ -22,7 +22,7 @@ install:
   - mkdir "%HAXELIB_ROOT%"
   - haxelib setup "%HAXELIB_ROOT%"
   - haxelib git hxmake https://github.com/eliasku/hxmake.git
-  - haxelib dev hxease .
+  - haxelib dev ecx .
 
 build: off
 
