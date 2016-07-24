@@ -11,7 +11,7 @@ abstract MapTo<T>(Array<T>) {
 		return this[entity.id];
 	}
 
-	@:op([])
+	@:arrayAccess
 	inline public function getFast(id:Int):T {
 		return this[id];
 	}

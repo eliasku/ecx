@@ -1,0 +1,29 @@
+version: "{build}"
+
+environment:
+  global:
+    HAXELIB_ROOT: C:\projects\haxelib
+  matrix:
+    - TARGET=interp,neko
+    - TARGET=cpp
+    - TARGET=flash,js,node
+
+matrix:
+  fast_finish: true
+
+branches:
+  only:
+    - master
+
+install:
+  - cinst haxe -version 3.2.1 -y
+  - RefreshEnv
+  - mkdir "%HAXELIB_ROOT%"
+  - haxelib setup "%HAXELIB_ROOT%"
+  - haxelib git hxmake https://github.com/eliasku/hxmake.git
+  - haxelib dev hxease .
+
+build: off
+
+test_script:
+  - haxelib run hxmake --neko test --override-test-target="%TARGET%"

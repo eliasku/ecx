@@ -29,7 +29,7 @@ abstract FastArray<T>(FastArrayData<T>) {
 		#end
 	}
 
-	@:op([])
+	@:arrayAccess
 	public inline function get(index:Int):Null<T> {
 //#if cpp
 //		return cpp.NativeArray.unsafeGet(this, index);
@@ -38,7 +38,7 @@ abstract FastArray<T>(FastArrayData<T>) {
 //#end
 	}
 
-	@:op([])
+	@:arrayAccess
 	public inline function set(index:Int, val:T):T {
 //#if cpp
 //		return cpp.NativeArray.unsafeSet(this, index, val);
