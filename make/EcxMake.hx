@@ -1,3 +1,5 @@
+import hxmake.test.TestTask;
+import hxmake.haxelib.HaxelibExt;
 import hxmake.idea.IdeaPlugin;
 import hxmake.haxelib.HaxelibPlugin;
 
@@ -15,12 +17,21 @@ class EcxMake extends hxmake.Module {
 		apply(HaxelibPlugin);
 		apply(IdeaPlugin);
 
-		var cfg = library().config;
-		cfg.version = "0.0.1";
-		cfg.description = "ECX entity-component-system framework";
-		cfg.url = "https://github.com/eliasku/ecx";
-		cfg.tags = ["entity", "component", "system", "ecs", "ces", "cross"];
-		cfg.contributors = ["eliasku"];
-		cfg.license = "MIT";
+		library(function(ext:HaxelibExt) {
+			ext.config.version = "0.0.1";
+			ext.config.description = "ECX entity-component-system framework";
+			ext.config.url = "https://github.com/eliasku/ecx";
+			ext.config.tags = ["entity", "component", "system", "ecs", "ces", "cross"];
+			ext.config.contributors = ["eliasku"];
+			ext.config.license = "MIT";
+			ext.config.releasenote = "Initial release";
+
+			ext.pack.includes = ["src", "haxelib.json", "README.md"];
+		});
+
+		var tt = new TestTask();
+		tt.targets = ["neko", "flash", "js", "cpp"];
+		tt.libraries = ["ecx"];
+		task("test", tt);
 	}
 }
