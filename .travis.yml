@@ -20,7 +20,7 @@ env:
     - TARGET=interp,neko
     - TARGET=flash,js,node
     - TARGET=cpp
-    #- TARGET=cs,java
+    - TARGET=cs,java
 
 #matrix:
 #  allow_failures:
