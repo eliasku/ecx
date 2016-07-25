@@ -64,4 +64,8 @@ class Component {
 	inline function get_world() {
 		return entity != null ? entity.world : null;
 	}
+
+	inline function toString():String {
+		return 'Component #${_typeId()} (${_typeIndex()})';
+	}
 }

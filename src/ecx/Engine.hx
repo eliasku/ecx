@@ -1,6 +1,5 @@
 package ecx;
 
-import ecx.macro.WorldTypeBuilder;
 import ecx.ds.CArray;
 import ecx.managers.EntityManager;
 import ecx.types.TypeManager;
@@ -23,7 +22,7 @@ class Engine {
 
 	var _types:TypeManager;
 
-	function new(capacity:Int = 1000) {
+	function new(capacity:Int) {
 		_types = new TypeManager();
 
 		entities = new CArray(capacity + 1);
@@ -40,9 +39,9 @@ class Engine {
 		edb = new EntityManager(this, capacity);
 	}
 
-	public static function create(config:WorldConfig):World {
+	public static function create(config:WorldConfig, capacity:Int = 0x40000):World {
 		if(instance == null) {
-			instance = new Engine();
+			instance = new Engine(capacity);
 		}
 		return new World(instance, config);
 	}

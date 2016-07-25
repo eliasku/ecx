@@ -103,4 +103,8 @@ class Entity {
 		return database.worlds[id];
 	}
 
+	inline function toString():String {
+		return 'Entity #$id';
+	}
+
 }
