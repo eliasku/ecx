@@ -255,6 +255,21 @@ class WorldTypeBuilder {
 		return superClass.meta.has(":base");
 	}
 #end
+
+//	public macro static function createComponents(self:ExprOf<ecx.Engine>, cap:ExprOf<Int>) {
+//		var exprs:Array<Expr> = [];
+//		var map:Map<String, WorldTypeInfo> = CACHE.get(0);
+//		for(ti in map) {
+//			var p:Array<String> = ti.path.split(".");
+//			var name = p.pop();
+//			var typeParam = TypeParam.TPType(ComplexType.TPath({name:name, pack:p}));
+//			var tp:TypePath = {name:"CArray", pack:["ecx", "ds"], params:[typeParam]};
+//			//return macro @:pos(Context.currentPos())@:privateAccess new $tp();
+//			var expr = macro $self.components[$v{ti.id}] = new $tp($cap + 1);
+//			exprs.push(expr);
+//		}
+//		return macro @:pos(Context.currentPos()) $b{exprs};
+//	}
 }
 
 class WorldTypeInfo {

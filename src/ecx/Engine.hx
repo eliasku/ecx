@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.macro.WorldTypeBuilder;
 import ecx.ds.CArray;
 import ecx.managers.EntityManager;
 import ecx.types.TypeManager;
@@ -31,6 +32,7 @@ class Engine {
 
 		var componentsLength = _types.maxComponentId + 1;
 		components = new CArray(componentsLength);
+//		WorldTypeBuilder.createComponents(this, capacity);
 		for(i in 0...componentsLength) {
 			components[i] = new CArray(capacity + 1);
 		}
