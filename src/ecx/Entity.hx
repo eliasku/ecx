@@ -60,10 +60,13 @@ class Entity {
 		return Engine.instance.edb.create();
 	}
 
-	@:nonVirtual @:unreflective
+	@:nonVirtual @:unreflective @:generic
 	function _add<T:Component>(typeId:Int, component:T):T {
-		database.components[typeId][id] = component;
-		component._internal_setEntity(this);
+		// workaround for old hxcpp
+		var comp:Component = component;
+
+		database.components[typeId][id] = comp;
+		comp._internal_setEntity(this);
 		if(world != null) {
 			world._internal_entityChanged(id);
 		}

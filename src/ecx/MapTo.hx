@@ -1,9 +1,11 @@
 package ecx;
 
-@:generic
-abstract MapTo<T>(Array<T>) {
+import ecx.ds.CArray;
 
-	@:generic inline public function new<T>(arr:Array<Component>) {
+@:generic
+abstract MapTo<T>(CArray<T>) {
+
+	@:generic inline public function new<T>(arr:CArray<Component>) {
 		this = cast arr;
 	}
 

@@ -2,29 +2,23 @@ package ecx;
 
 import ecx.Engine;
 import ecx.components.TestPosition;
-import ecx.components.TestComponent;
+import ecx.components.Value;
 import utest.Assert;
 
 @:keep
-class TestCase {
+class IssuesTest extends EcxTest {
 
-	var world:World;
-
-	public function new() {}
-
-	public function setup() {
-		var config = new WorldConfig();
-		config.add(new EmptySystem());
-		world = Engine.create(config);
+	public function new() {
+		super();
 	}
 
 	public function testAccess() {
 		var e = world.create();
-		e.create(TestComponent);
-		Assert.notNull(e.get(TestComponent));
-		Assert.equals(0, e.get(TestComponent).val);
-		e.get(TestComponent).val = 1;
-		Assert.equals(1, e.get(TestComponent).val);
+		e.create(Value);
+		Assert.notNull(e.get(Value));
+		Assert.equals(0, e.get(Value).value);
+		e.get(Value).value = 1;
+		Assert.equals(1, e.get(Value).value);
 		//trace("1: " + Database.typeId(TestPosition));
 //		trace("2: " + e.database.components[Database.typeId(TestPosition)]);
 //		trace("3: " + e.database.components[Database.typeId(TestPosition)].length);
@@ -34,17 +28,17 @@ class TestCase {
 
 	public function testClone() {
 		var e1 = world.create();
-		e1.create(TestComponent);
+		e1.create(Value);
 		var e2 = world.create();
 		var e3 = world.clone(e1);
 		var e4 = world.clone(e2);
-		Assert.isTrue(e3.has(TestComponent));
-		Assert.isFalse(e4.has(TestComponent));
+		Assert.isTrue(e3.has(Value));
+		Assert.isFalse(e4.has(Value));
 	}
 
 	public function testComponentsTraversal() {
 		var e:Entity = world.create();
-		e.create(TestComponent);
+		e.create(Value);
 		e.create(TestPosition);
 		var keys = [];
 		var values = [];
@@ -72,10 +66,5 @@ class TestCase {
 		expectedEntitiesCount++;
 
 		Assert.equals(expectedEntitiesCount, world.entitiesTotal);
-	}
-
-
-	public function teardown() {
-		world = null;
 	}
 }

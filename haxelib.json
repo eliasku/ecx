@@ -1,6 +1,6 @@
 {
 	"name": "ecx",
-	"license": "https://github.com/eliasku/ecx",
+	"license": "MIT",
 	"tags": [
 		"entity",
 		"component",
@@ -14,5 +14,7 @@
 	"contributors": [
 		"eliasku"
 	],
-	"version": "0.0.1"
+	"releasenote": "Initial release",
+	"version": "0.0.1",
+	"url": "https://github.com/eliasku/ecx"
 }

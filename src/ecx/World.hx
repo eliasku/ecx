@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.ds.CArray;
 import ecx.managers.EntityManager;
 import ecx.macro.ManagerMacro;
 import haxe.macro.Expr.ExprOf;
@@ -81,7 +82,7 @@ class World {
 		#if debug
 		guardEntity(id);
 		#end
-		var flags:Array<Int> = database.flags;
+		var flags:CArray<Int> = database.flags;
 		if((flags[id] & 0x2) == 0) {
 			_toRemove.push(entity);
 			flags[id] |= 0x2;
@@ -91,7 +92,7 @@ class World {
 	public function invalidate() {
 		_edb.freeFromWorld(this, _toRemove, _entities);
 
-		var flags:Array<Int> = database.flags;
+		var flags:CArray<Int> = database.flags;
 		var updateList = _toUpdate;
 		var startLength = updateList.length;
 		if(updateList.length > 0) {
@@ -167,7 +168,7 @@ class World {
 		#if debug
 		guardEntity(id);
 		#end
-		var flags:Array<Int> = database.flags;
+		var flags:CArray<Int> = database.flags;
 		if((flags[id] & 0x1) == 0) {
 			flags[id] |= 0x1;
 			_toUpdate.push(id);
@@ -180,4 +181,8 @@ class World {
 		if(database.worlds[id] != this) throw "Entity from another world";
 	}
 	#end
+
+	public function toString():String {
+		return "World";
+	}
 }

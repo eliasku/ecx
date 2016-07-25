@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.ds.CArray;
 import ecx.macro.ManagerMacro;
 import haxe.macro.Expr;
 
@@ -107,8 +108,8 @@ class System {
 @:access(ecx.System, ecx.Entity)
 class Family {
 
-	var _componentsByType:FastArray<Array<Component>>;
-	var _entityMap:Array<Entity>;
+	var _componentsByType:CArray<CArray<Component>>;
+	var _entityMap:CArray<Entity>;
 	public var system(default, null):System;
 	public var entities(default, null):Array<Entity> = [];
 

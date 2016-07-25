@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.ds.CArray;
 import ecx.managers.EntityManager;
 import ecx.types.TypeManager;
 import haxe.macro.Context;
@@ -13,22 +14,28 @@ class Engine {
 	public static var instance(default, null):Engine;
 
 	// TYPE -> ENTITIES
-	public var components(default, null):FastArray<Array<Component>>;
+	public var components(default, null):CArray<CArray<Component>>;
 	public var edb(default, null):EntityManager;
-	public var entities(default, null):Array<Entity> = [];
-	public var worlds(default, null):Array<World> = [];
-	public var flags(default, null):Array<Int> = [];
+	public var entities(default, null):CArray<Entity>;
+	public var worlds(default, null):CArray<World>;
+	public var flags(default, null):CArray<Int>;
 
 	var _types:TypeManager;
 
-	function new(max:Int = 1000) {
+	function new(capacity:Int = 1000) {
 		_types = new TypeManager();
+
+		entities = new CArray(capacity + 1);
+		worlds = new CArray(capacity + 1);
+		flags = new CArray(capacity + 1);
+
 		var componentsLength = _types.maxComponentId + 1;
-		components = new FastArray(componentsLength);
+		components = new CArray(componentsLength);
 		for(i in 0...componentsLength) {
-			components[i] = [];
+			components[i] = new CArray(capacity + 1);
 		}
-		edb = new EntityManager(this, max);
+
+		edb = new EntityManager(this, capacity);
 	}
 
 	public static function create(config:WorldConfig):World {

@@ -1,78 +1,61 @@
 package ecx.managers;
 
+import ecx.ds.CArray;
+
 @:unreflective
 @:final
 @:access(ecx.Entity, ecx.World)
 class EntityManager {
 
-    var _map:Array<Entity> = [];
-    var _database:Engine;
+    var _engine:Engine;
     var _nextEntityId:Int = 1;
-    var _pool:FastArray<Entity>;
+    var _pool:CArray<Entity>;
     var _poolHead:Int = 0;
-    var _poolCap:Int = 0;
 
-#if debug
-    public var entitiesAllocated:Int = 0;
-    public var entitiesPoolUsed(get, never):Int;
-    public var entitiesPoolFree(get, never):Int;
-    public var entitiesPoolCapacity(get, never):Int;
+    public var allocated(default, null):Int = 0;
+    public var capacity(default, null):Int;
+    public var used(get, never):Int;
+    public var available(get, never):Int;
 
-    inline function get_entitiesPoolUsed():Int {
+    inline function get_used():Int {
         return _poolHead;
     }
 
-    inline function get_entitiesPoolFree():Int {
-        return _poolCap - _poolHead;
+    inline function get_available():Int {
+        return capacity - _poolHead;
     }
 
-    inline function get_entitiesPoolCapacity():Int {
-        return _poolCap;
-    }
-#end
-
-    public function new(database:Engine, initial:Int) {
-        _database = database;
-        _poolCap = initial;
-        var pool = new FastArray<Entity>(initial);
+    public function new(database:Engine, capacity:Int) {
+        this.capacity = capacity;
+        _engine = database;
+        var pool = new CArray<Entity>(capacity);
         var flags = database.flags;
         var entities = database.entities;
         var e:Entity;
         var id:Int;
-        for(i in 0...initial) {
-            id = _nextEntityId++;
+        var uid:Int = _nextEntityId;
+        for(i in 0...capacity) {
+            id = uid++;
             e = new Entity();
             e.id = id;
             e.database = database;
             flags[id] = 0;
             entities[id] = e;
             pool[i] = e;
-            #if debug
-            ++entitiesAllocated;
-            #end
         }
+        allocated += capacity;
+        _nextEntityId = uid;
         _pool = pool;
     }
 
     public function create():Entity {
-        var e:Entity = null;
         var head:Int = _poolHead;
-        if(head < _poolCap) {
-            e = _pool[head];
-            ++_poolHead;
-            _database.flags[e.id] = 0;
+        if(head >= capacity) {
+            throw "Out of entities";
         }
-        else {
-            var id = _nextEntityId++;
-            e = new Entity();
-            e.database = _database;
-            e.id = id;
-            _database.flags[id] = 0;
-            _database.entities[id] = e;
-            #if debug
-            ++entitiesAllocated;
-            #end
-        }
+        var e:Entity = _pool[head];
+        ++_poolHead;
+        _engine.flags[e.id] = 0;
         return e;
     }
 
@@ -80,41 +63,28 @@ class EntityManager {
         while(list.length > 0) {
             var entities:Array<Entity> = container;
             var head:Int = _poolHead;
-            var pool:FastArray<Entity> = _pool;
-            var flags:Array<Int> = _database.flags;
-//			var count = list.length;
-//			var i = 0;
+            var pool:CArray<Entity> = _pool;
+            var flags:CArray<Int> = _engine.flags;
             var count = list.length;
             var i = count - 1;
             while(i >= 0) {
-//			while(i < count) {
                 var e = list[i];
                 #if debug
                 if(world != e.world) throw "Bad world on freeFromWorld";
                 #end
                 e._clear();
-//				if(_database.worlds[e.id] != null) {
                 world._internal_entityChanged(e.id);
-                _database.worlds[e.id] = null;
-//				}
+                _engine.worlds[e.id] = null;
                 flags[e.id] &= ~0x2;
 
                 entities.splice(entities.lastIndexOf(e), 1);
-//				entities.remove(e);
-                if(head > 0) {
-                    --head;
-                    pool[head] = e;
-                }
-                else {
-                    pool.push(e);
-                }
+                --head;
+                pool[head] = e;
                 --i;
-//				++i;
             }
 
-            if(head == 0) {
-                _poolCap = pool.length;
-            }
+            if(head < 0) throw "No way!";
+
             _poolHead = head;
 
             //if(startLength != removeList.length) throw "removing while removing";

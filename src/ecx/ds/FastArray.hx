@@ -1,4 +1,4 @@
-package ecx;
+package ecx.ds;
 
 #if flash
 private typedef FastArrayData<T> = flash.Vector<T>;

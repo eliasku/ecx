@@ -31,7 +31,7 @@ class EcxMake extends hxmake.Module {
 
 		var tt = new TestTask();
 		tt.debug = true;
-		tt.targets = ["neko", "flash", "js", "cpp"];
+		tt.targets = ["neko", "flash", "js", "cpp", "java", "cs"];
 		tt.libraries = ["ecx"];
 		task("test", tt);
 	}

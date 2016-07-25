@@ -21,6 +21,7 @@ class Component {
 	public var entity(default, null):Entity;
 	public var world(get, never):World;
 
+	@:keep
 	function _internal_setEntity(entity:Entity) {
 		if(entity != null) {
 			this.entity = entity;
@@ -61,6 +62,6 @@ class Component {
 	}
 
 	inline function get_world() {
-		return entity.world;
+		return entity != null ? entity.world : null;
 	}
 }

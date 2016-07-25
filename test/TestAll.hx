@@ -1,15 +1,26 @@
 package ;
 
+
+import ecx.IssuesTest;
+import ecx.WorldTest;
+import ecx.ComponentTest;
+import ecx.EntityTest;
 import utest.TestResult;
-import ecx.TestCase;
 import utest.Runner;
 import utest.ui.Report;
 
 class TestAll {
 	public static function main() {
 		var runner = new Runner();
-		runner.addCase(new TestCase());
+		addTests(runner);
 		run(runner);
+	}
+
+	static function addTests(runner:Runner) {
+		runner.addCase(new WorldTest());
+		runner.addCase(new EntityTest());
+		runner.addCase(new ComponentTest());
+		runner.addCase(new IssuesTest());
 	}
 
 	static function run(runner:Runner) {
