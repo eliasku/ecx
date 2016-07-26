@@ -8,7 +8,7 @@ class TypeInfo {
     public var index(default, null):Int;
     public var kind(default, null):TypeKind;
 
-    public function new(path:String, kind:TypeKind, id:Int, index:Int) {
+    function new(path:String, kind:TypeKind, id:Int, index:Int) {
         this.path = path;
         this.id = id;
         this.index = index;

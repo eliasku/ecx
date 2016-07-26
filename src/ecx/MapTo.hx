@@ -2,7 +2,8 @@ package ecx;
 
 import ecx.ds.CArray;
 
-#if flash
+// TODO: cs & java arrays covariance
+#if (flash||cs||java)
 private typedef MTD<T> = CArray<Component>;
 #else
 private typedef MTD<T> = CArray<T>;
@@ -16,7 +17,7 @@ abstract MapTo<T>(MTD<T>) {
 	}
 
 	inline public function get(entity:Entity):T {
-		#if flash
+		#if (flash||cs||java)
 		return cast this[entity.id];
 		#else
 		return this[entity.id];
@@ -25,7 +26,7 @@ abstract MapTo<T>(MTD<T>) {
 
 	@:arrayAccess
 	inline public function getFast(id:Int):T {
-		#if flash
+		#if (flash||cs||java)
 		return cast this[id];
 		#else
 		return this[id];

@@ -15,6 +15,6 @@ class Environment {
 	public function new() {
 		var config = new WorldConfig();
 		config.add(new EmptySystem());
-		world = Engine.create(config);
+		world = Engine.initialize().createWorld(config);
 	}
 }

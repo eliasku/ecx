@@ -15,7 +15,7 @@ private typedef CArrayData<T> = Array<T>;
 #end
 
 /***
-	Dense Fixed-size array (CArray is const-size-array)
+	Dense Fixed-size array (CArray is const-size array)
 **/
 @:generic
 abstract CArray<T>(CArrayData<T>) {

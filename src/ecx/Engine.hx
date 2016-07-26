@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.types.TypeInfo;
 import ecx.ds.CArray;
 import ecx.managers.EntityManager;
 import ecx.types.TypeManager;
@@ -25,25 +26,27 @@ class Engine {
 	function new(capacity:Int) {
 		_types = new TypeManager();
 
-		entities = new CArray(capacity + 1);
-		worlds = new CArray(capacity + 1);
-		flags = new CArray(capacity + 1);
-
-		var componentsLength = _types.maxComponentId + 1;
-		components = new CArray(componentsLength);
-//		WorldTypeBuilder.createComponents(this, capacity);
-		for(i in 0...componentsLength) {
+		components = new CArray(_types.lastComponentId + 1);
+		for(i in 0...components.length) {
 			components[i] = new CArray(capacity + 1);
 		}
 
 		edb = new EntityManager(this, capacity);
+		entities = edb.map;
+		worlds = edb.worlds;
+		flags = edb.flags;
 	}
 
-	public static function create(config:WorldConfig, capacity:Int = 0x40000):World {
-		if(instance == null) {
-			instance = new Engine(capacity);
+	public static function initialize(capacity:Int = 0x40000):Engine {
+		if(instance != null) {
+			throw "Engine already created";
 		}
-		return new World(instance, config);
+		instance = new Engine(capacity);
+		return instance;
+	}
+
+	public function createWorld(config:WorldConfig):World {
+		return new World(this, config);
 	}
 
 	macro static public function typeId<T>(type:ExprOf<Class<T>>):ExprOf<Int> {
@@ -54,22 +57,15 @@ class Engine {
 		return macro @:pos(haxe.macro.Context.currentPos())$type._TYPE_INDEX;
 	}
 
-	inline public function getTypeIndex<T>(type:Class<T>):Int {
-		//return TypeDb.lookup.get(Type.getClassName(type)).index;
-		return 0;
-	}
-
-	inline public function getTypeId<T>(type:Class<T>):Int {
-		//return TypeDb.lookup.get(Type.getClassName(type)).id;
-		return 0;
-	}
-
-	inline public function getTypeKind<T>(type:Class<T>):Int {
-		//return TypeDb.lookup.get(Type.getClassName(type)).kind;
-		return 0;
+	inline public function typeInfo<T>(type:Class<T>):Null<TypeInfo> {
+		return _types.lookup.get(Type.getClassName(type));
 	}
 
 	macro public function mapTo<T:Component>(self:ExprOf<Engine>, type:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
 		return macro new MapTo(cast $self.components[$type._TYPE_ID]);
+	}
+
+	public function toString() {
+		return "Engine";
 	}
 }

@@ -144,7 +144,7 @@ class WorldTypeBuilder {
 									switch(tp.params[0]) {
 										case TPType(TPath(tp)):
 											var fullname = MacroUtil.getFullNameFromTypePath(tp);
-											exprs.push(macro $i{field.name} = world.database.mapTo($i{fullname}));
+											exprs.push(macro $i{field.name} = engine.mapTo($i{fullname}));
 										default:
 									}
 								}

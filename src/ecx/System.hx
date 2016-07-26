@@ -23,6 +23,9 @@ class System {
 	public var world(default, null):World;
 
 	@:unreflective
+	public var engine(default, null):Engine;
+
+	@:unreflective
 	var _flags:Flags = 0;
 
 	@:unreflective
@@ -46,7 +49,7 @@ class System {
 
 	@:nonVirtual @:unreflective
 	function _internal_entityChanged(entityId:Int) {
-		var worldMatch:Bool = world.database.worlds[entityId] == world;
+		var worldMatch:Bool = engine.worlds[entityId] == world;
 		for(family in _families) {
 			family._internal_entityChanged(entityId, worldMatch);
 		}
@@ -117,8 +120,8 @@ class Family {
 
 	function new(system:System) {
 		this.system = system;
-		_componentsByType = system.world.database.components;
-		_entityMap = system.world.database.entities;
+		_componentsByType = system.engine.components;
+		_entityMap = system.engine.entities;
 	}
 
 	inline function require(required:Array<Int>):Family {

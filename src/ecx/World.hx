@@ -22,7 +22,7 @@ class World {
 	var _lookup:Array<System> = []; // Map<Int, System>
 	var _processors:Array<System> = [];
 
-	public var database(default, null):Engine;
+	public var engine(default, null):Engine;
 	public var entitiesTotal(get, never):Int;
 
 	inline function get_entitiesTotal():Int {
@@ -35,9 +35,9 @@ class World {
 	var _toUpdate:Array<Int> = [];
 	var _toRemove:Array<Entity> = [];
 
-	function new(database:Engine, config:WorldConfig) {
-		this.database = database;
-		_edb = database.edb;
+	function new(engine:Engine, config:WorldConfig) {
+		this.engine = engine;
+		_edb = engine.edb;
 		var systems = config._systems;
 		var priorities = config._priorities;
 		var total = systems.length;
@@ -54,14 +54,14 @@ class World {
 
 	public function create():Entity {
 		var e:Entity = _edb.create();
-		database.worlds[e.id] = this;
+		engine.worlds[e.id] = this;
 		_entities.push(e);
 		return e;
 	}
 
 	public function clone(source:Entity):Entity {
 		var entity = create();
-		var componentsByType = database.components;
+		var componentsByType = engine.components;
 		var sourceId = source.id;
 		for(cid in 0...componentsByType.length) {
 			var component:Component = componentsByType[cid][sourceId];
@@ -82,7 +82,7 @@ class World {
 		#if debug
 		guardEntity(id);
 		#end
-		var flags:CArray<Int> = database.flags;
+		var flags:CArray<Int> = engine.flags;
 		if((flags[id] & 0x2) == 0) {
 			_toRemove.push(entity);
 			flags[id] |= 0x2;
@@ -92,7 +92,7 @@ class World {
 	public function invalidate() {
 		_edb.freeFromWorld(this, _toRemove, _entities);
 
-		var flags:CArray<Int> = database.flags;
+		var flags:CArray<Int> = engine.flags;
 		var updateList = _toUpdate;
 		var startLength = updateList.length;
 		if(updateList.length > 0) {
@@ -115,7 +115,7 @@ class World {
 		#if debug
 		if(entity.world != null) throw "World is not empty before internal placing";
 		#end
-		database.worlds[entity.id] = this;
+		engine.worlds[entity.id] = this;
 		_entities.push(entity);
 	}
 
@@ -124,7 +124,7 @@ class World {
 		if(entity.world != this) throw "World is BAD before internal unplacing";
 		#end
 		var id:Int = entity.id;
-		database.worlds[id] = null;
+		engine.worlds[id] = null;
 		for(processor in _processors) {
 			processor._internal_entityChanged(id);
 		}
@@ -144,6 +144,7 @@ class World {
 
 		for(system in _systems) {
 			system.world = this;
+			system.engine = engine;
 			system._inject();
 			if(system._isProcessor()) {
 				_processors.push(system);
@@ -168,7 +169,7 @@ class World {
 		#if debug
 		guardEntity(id);
 		#end
-		var flags:CArray<Int> = database.flags;
+		var flags:CArray<Int> = engine.flags;
 		if((flags[id] & 0x1) == 0) {
 			flags[id] |= 0x1;
 			_toUpdate.push(id);
@@ -177,8 +178,8 @@ class World {
 
 	#if debug
 	function guardEntity(id:Int) {
-		if(database.entities[id] == null) throw "Null entity";
-		if(database.worlds[id] != this) throw "Entity from another world";
+		if(engine.entities[id] == null) throw "Null entity";
+		if(engine.worlds[id] != this) throw "Entity from another world";
 	}
 	#end
 

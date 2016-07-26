@@ -7,64 +7,76 @@ import ecx.ds.CArray;
 @:access(ecx.Entity, ecx.World)
 class EntityManager {
 
-    var _engine:Engine;
-    var _nextEntityId:Int = 1;
+    public var map(default, null):CArray<Entity>;
+    public var worlds(default, null):CArray<World>;
+    public var flags(default, null):CArray<Int>;
+
+    // TODO: should we reserve 0 index for invalid entity?
+    var _nextId:Int = 1;
     var _pool:CArray<Entity>;
-    var _poolHead:Int = 0;
 
     public var allocated(default, null):Int = 0;
+    public var used(default, null):Int = 0;
     public var capacity(default, null):Int;
-    public var used(get, never):Int;
     public var available(get, never):Int;
 
-    inline function get_used():Int {
-        return _poolHead;
-    }
-
     inline function get_available():Int {
-        return capacity - _poolHead;
+        return capacity - used;
     }
 
-    public function new(database:Engine, capacity:Int) {
+    public function new(engine:Engine, capacity:Int) {
         this.capacity = capacity;
-        _engine = database;
-        var pool = new CArray<Entity>(capacity);
-        var flags = database.flags;
-        var entities = database.entities;
+
+        var pool = new CArray(capacity);
+        var flags = new CArray(capacity + 1);
+        var map = new CArray(capacity + 1);
+        var worlds = new CArray(capacity + 1);
+
         var e:Entity;
         var id:Int;
-        var uid:Int = _nextEntityId;
+        var uid:Int = _nextId;
         for(i in 0...capacity) {
             id = uid++;
             e = new Entity();
             e.id = id;
-            e.database = database;
+            e.engine = engine;
             flags[id] = 0;
-            entities[id] = e;
+            map[id] = e;
             pool[i] = e;
         }
         allocated += capacity;
-        _nextEntityId = uid;
+        _nextId = uid;
         _pool = pool;
+        this.flags = flags;
+        this.map = map;
+        this.worlds = worlds;
     }
 
     public function create():Entity {
-        var head:Int = _poolHead;
+        var head:Int = used;
         if(head >= capacity) {
-            throw "Out of entities";
+            throw 'Out of entities, max allowed $capacity';
         }
         var e:Entity = _pool[head];
-        ++_poolHead;
-        _engine.flags[e.id] = 0;
+        ++used;
+        flags[e.id] = 0;
         return e;
     }
 
+    public function freePrefab(entity:Entity) {
+        //if(entity == null) throw "Invalid argument";
+        if(entity.world != null) throw "Entity is not a prefab";
+        _pool[used] = entity;
+        --used;
+    }
+
     public function freeFromWorld(world:World, list:Array<Entity>, container:Array<Entity>) {
+        var locPool:CArray<Entity> = _pool;
+        var locFlags:CArray<Int> = flags;
+        var locWorlds:CArray<World> = worlds;
         while(list.length > 0) {
             var entities:Array<Entity> = container;
-            var head:Int = _poolHead;
-            var pool:CArray<Entity> = _pool;
-            var flags:CArray<Int> = _engine.flags;
+            var head:Int = used;
             var count = list.length;
             var i = count - 1;
             while(i >= 0) {
@@ -74,18 +86,18 @@ class EntityManager {
                 #end
                 e._clear();
                 world._internal_entityChanged(e.id);
-                _engine.worlds[e.id] = null;
-                flags[e.id] &= ~0x2;
+                locWorlds[e.id] = null;
+                locFlags[e.id] &= ~0x2;
 
                 entities.splice(entities.lastIndexOf(e), 1);
                 --head;
-                pool[head] = e;
+                locPool[head] = e;
                 --i;
             }
 
             if(head < 0) throw "No way!";
 
-            _poolHead = head;
+            used = head;
 
             //if(startLength != removeList.length) throw "removing while removing";
             list.splice(0, count);

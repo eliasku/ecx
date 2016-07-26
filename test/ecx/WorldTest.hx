@@ -14,9 +14,9 @@ class WorldTest extends EcxTest {
 
 	public function testInitialize() {
 		Assert.notNull(world);
-		Assert.notNull(world.database.edb);
-		Assert.notNull(world.database.components);
-		Assert.notNull(world.database.flags);
-		Assert.notNull(world.database.worlds);
+		Assert.notNull(world.engine.edb);
+		Assert.notNull(world.engine.components);
+		Assert.notNull(world.engine.flags);
+		Assert.notNull(world.engine.worlds);
 	}
 }

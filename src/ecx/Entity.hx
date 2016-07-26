@@ -11,18 +11,17 @@ import haxe.macro.Expr.ExprOf;
 class Entity {
 
 	public var id(default, null):Int;
-	public var database(default, null):Engine;
+	public var engine(default, null):Engine;
 	public var world(get, never):World;
 
 	inline function new() {}
 
 	@:extern inline public function getComponent<T:Component>(typeId:Int, cls:Class<T>):T {
-		return database.components[typeId][id]._cast(cls);
+		return engine.components[typeId][id]._cast(cls);
 	}
 
 	macro public function get<T:Component>(self:ExprOf<Entity>, type:ExprOf<Class<T>>):ExprOf<T> {
 		var idExpr:ExprOf<Int> = ManagerMacro.id(type);
-//		return macro @:privateAccess $self.database.components[$idExpr][$self.id]._cast($type);
 		return macro $self.getComponent($idExpr, $type);
 	}
 
@@ -43,7 +42,7 @@ class Entity {
 
 	macro public function has<T:Component>(self:ExprOf<Entity>, type:ExprOf<Class<T>>):ExprOf<Bool> {
 		var idExpr:ExprOf<Int> = ManagerMacro.id(type);
-		return macro @:privateAccess $self.database.components[$idExpr][$self.id] != null;
+		return macro @:privateAccess $self.engine.components[$idExpr][$self.id] != null;
 	}
 
 	macro public function remove<T:Component>(self:ExprOf<Entity>, type:ExprOf<Class<T>>) {
@@ -57,6 +56,7 @@ class Entity {
 
 	@:nonVirtual @:unreflective
 	public static function prefab():Entity {
+		// TODO: delete prefabs!!!
 		return Engine.instance.edb.create();
 	}
 
@@ -65,7 +65,7 @@ class Entity {
 		// workaround for old hxcpp
 		var comp:Component = component;
 
-		database.components[typeId][id] = comp;
+		engine.components[typeId][id] = comp;
 		comp._internal_setEntity(this);
 		if(world != null) {
 			world._internal_entityChanged(id);
@@ -75,7 +75,7 @@ class Entity {
 
 	@:nonVirtual @:unreflective
 	function _remove(typeId:Int) {
-		var components = database.components[typeId];
+		var components = engine.components[typeId];
 		var component:Component = components[id];
 		if(component != null) {
 			component._internal_setEntity(null);
@@ -88,7 +88,7 @@ class Entity {
 
 	@:nonVirtual @:unreflective
 	function _clear() {
-		var componentsByType = database.components;
+		var componentsByType = engine.components;
 		var id:Int = this.id;
 		for(typeId in 0...componentsByType.length) {
 			var component:Component = componentsByType[typeId][id];
@@ -100,7 +100,7 @@ class Entity {
 	}
 
 	inline function get_world():World {
-		return database.worlds[id];
+		return engine.worlds[id];
 	}
 
 	inline function toString():String {

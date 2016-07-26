@@ -1,6 +1,7 @@
 package ;
 
 
+import ecx.MapToTest;
 import ecx.IssuesTest;
 import ecx.WorldTest;
 import ecx.ComponentTest;
@@ -20,6 +21,7 @@ class TestAll {
 		runner.addCase(new WorldTest());
 		runner.addCase(new EntityTest());
 		runner.addCase(new ComponentTest());
+		runner.addCase(new MapToTest());
 		runner.addCase(new IssuesTest());
 	}
 

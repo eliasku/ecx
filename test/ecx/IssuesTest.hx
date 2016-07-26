@@ -1,6 +1,5 @@
 package ecx;
 
-import ecx.Engine;
 import ecx.components.TestPosition;
 import ecx.components.Value;
 import utest.Assert;
@@ -42,7 +41,7 @@ class IssuesTest extends EcxTest {
 		e.create(TestPosition);
 		var keys = [];
 		var values = [];
-		var components = e.database.components;
+		var components = e.engine.components;
 		for(key in 0...components.length) {
 			keys.push(key);
 			var value = components[key][e.id];
