@@ -60,7 +60,7 @@ class Entity {
 		return Engine.instance.edb.create();
 	}
 
-	@:nonVirtual @:unreflective @:generic
+	@:nonVirtual @:unreflective
 	function _add<T:Component>(typeId:Int, component:T):T {
 		// workaround for old hxcpp
 		var comp:Component = component;
@@ -104,7 +104,7 @@ class Entity {
 	}
 
 	inline function toString():String {
-		return 'Entity #$id';
+		return 'entity #$id';
 	}
 
 }
