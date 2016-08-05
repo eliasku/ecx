@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.ds.Cast;
 import ecx.macro.ManagerMacro;
 import haxe.macro.Expr.ExprOf;
 
@@ -17,7 +18,7 @@ class Entity {
 	inline function new() {}
 
 	@:extern inline public function getComponent<T:Component>(typeId:Int, cls:Class<T>):T {
-		return engine.components[typeId][id]._cast(cls);
+		return Cast.unsafe(engine.components[typeId][id], cls);
 	}
 
 	macro public function get<T:Component>(self:ExprOf<Entity>, type:ExprOf<Class<T>>):ExprOf<T> {
@@ -64,12 +65,14 @@ class Entity {
 	function _add<T:Component>(typeId:Int, component:T):T {
 		// workaround for old hxcpp
 		var comp:Component = component;
-
 		engine.components[typeId][id] = comp;
 		comp._internal_setEntity(this);
-		if(world != null) {
-			world._internal_entityChanged(id);
+
+		var locWorld:World = world;
+		if(locWorld != null) {
+			locWorld._internal_entityChanged(id);
 		}
+
 		return component;
 	}
 
@@ -79,9 +82,12 @@ class Entity {
 		var component:Component = components[id];
 		if(component != null) {
 			component._internal_setEntity(null);
-			if(world != null) {
-				world._internal_entityChanged(id);
+
+			var locWorld:World = world;
+			if(locWorld != null) {
+				locWorld._internal_entityChanged(id);
 			}
+
 			components[id] = null;
 		}
 	}

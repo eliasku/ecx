@@ -1,5 +1,7 @@
 package ecx;
 
+import ecx.ds.CBitArray;
+import haxe.Int32;
 import ecx.ds.CArray;
 import ecx.macro.ManagerMacro;
 import haxe.macro.Expr;
@@ -72,15 +74,15 @@ class System {
 		return family.entities;
 	}
 
-	@:nonVirtual @:unreflective @:extern
-	inline function _cast<T:System>(clazz:Class<T>):T {
-		#if cpp
-		//return cpp.Pointer.addressOf(this).rawCast()[0];
-		return cpp.Pointer.fromRaw(cpp.Pointer.addressOf(this).rawCast()).value;
-		#else
-		return cast this;
-		#end
-	}
+//	@:nonVirtual @:unreflective @:extern
+//	inline function _cast<T:System>(clazz:Class<T>):T {
+//		#if cpp
+//		//return cpp.Pointer.addressOf(this).rawCast()[0];
+//		return cpp.Pointer.fromRaw(cpp.Pointer.addressOf(this).rawCast()).value;
+//		#else
+//		return cast this;
+//		#end
+//	}
 
 	@:nonVirtual @:unreflective @:extern
 	inline function _isIdle():Bool {
@@ -115,10 +117,12 @@ class Family {
 	var _entityMap:CArray<Entity>;
 	public var system(default, null):System;
 	public var entities(default, null):Array<Entity> = [];
+	public var activeBits(default, null):CBitArray;
 
 	var _required:Array<Int>;
 
 	function new(system:System) {
+		activeBits = new CBitArray(system.world.engine.edb.capacity + 1);
 		this.system = system;
 		_componentsByType = system.engine.components;
 		_entityMap = system.engine.entities;
@@ -147,14 +151,19 @@ class Family {
 	function _internal_entityChanged(entityId:Int, worldMatch:Bool) {
 		var fits = worldMatch && checkEntity(entityId);
 		var entity = _entityMap[entityId];
-		var index = entities.indexOf(entity);
-		var active = index >= 0;
-		if(fits && !active) {
+		//var address = entityId >>> 5;
+		//var mask = 1 << (entityId & 0x1F);
+		var isActive = activeBits.get(entityId);
+		if(fits && !isActive) {
+			activeBits.enable(entityId);
+			//this.active[address] |= mask;
 			entities.push(entity);
 			system.onEntityAdded(entity, this);
 		}
-		else if(!fits && active) {
-			entities.splice(index, 1);
+		else if(!fits && isActive) {
+			activeBits.disable(entityId);
+			//this.active[address] &= ~mask;
+			entities.remove(entity);
 			system.onEntityRemoved(entity, this);
 		}
 	}

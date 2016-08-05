@@ -19,7 +19,6 @@ class Engine {
 	public var edb(default, null):EntityManager;
 	public var entities(default, null):CArray<Entity>;
 	public var worlds(default, null):CArray<World>;
-	public var flags(default, null):CArray<Int>;
 
 	var _types:TypeManager;
 
@@ -34,7 +33,6 @@ class Engine {
 		edb = new EntityManager(this, capacity);
 		entities = edb.map;
 		worlds = edb.worlds;
-		flags = edb.flags;
 	}
 
 	public static function initialize(capacity:Int = 0x40000):Engine {
@@ -67,5 +65,30 @@ class Engine {
 
 	public function toString() {
 		return "Engine";
+	}
+
+
+	public static function calculateMemoryUsage(entityCapacity:Int, componentsCount:Int, families:Int) {
+		var total = 0;
+
+		// components storage
+		total += componentsCount * 4 + (entityCapacity + 1) * 4;
+
+		// entity pool
+		total += entityCapacity * 4;
+
+		// entity worlds map
+		total += (entityCapacity + 1) * 4;
+
+		// entity flags map
+		total += (entityCapacity + 1) * 4;
+
+		// entity id-wrapper map
+		total += (entityCapacity + 1) * 4;
+
+		// families active map storage
+		total += families * (entityCapacity >>> 5);
+
+		return total;
 	}
 }

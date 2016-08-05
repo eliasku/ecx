@@ -1,5 +1,7 @@
 package ecx;
 
+import ecx.ds.Cast;
+import ecx.ds.CBitArray;
 import ecx.ds.CArray;
 import ecx.managers.EntityManager;
 import ecx.macro.ManagerMacro;
@@ -22,22 +24,27 @@ class World {
 	var _lookup:Array<System> = []; // Map<Int, System>
 	var _processors:Array<System> = [];
 
+	var _entities:Array<Int> = [];
+	var _toUpdate:Array<Int> = [];
+	var _toRemove:Array<Int> = [];
+
+	// global ref
 	public var engine(default, null):Engine;
+	var _edb:EntityManager;
+	var _updateFlags:CBitArray;
+	var _removeFlags:CBitArray;
+
 	public var entitiesTotal(get, never):Int;
 
 	inline function get_entitiesTotal():Int {
 		return _entities.length;
 	}
 
-	var _edb:EntityManager;
-	var _entities:Array<Entity> = [];
-
-	var _toUpdate:Array<Int> = [];
-	var _toRemove:Array<Entity> = [];
-
 	function new(engine:Engine, config:WorldConfig) {
 		this.engine = engine;
 		_edb = engine.edb;
+		_updateFlags = _edb.updateFlags;
+		_removeFlags = _edb.removeFlags;
 		var systems = config._systems;
 		var priorities = config._priorities;
 		var total = systems.length;
@@ -49,13 +56,15 @@ class World {
 
 	macro public function get<T:System>(self:ExprOf<World>, cls:ExprOf<Class<T>>):ExprOf<T> {
 		var id = ManagerMacro.id(cls);
-		return macro @:privateAccess $self._lookup[$id]._cast($cls);
+		//return macro @:privateAccess $self._lookup[$id]._cast($cls);
+		return macro Cast.unsafe(@:privateAccess $self._lookup[$id], $cls);
 	}
 
 	public function create():Entity {
 		var e:Entity = _edb.create();
-		engine.worlds[e.id] = this;
-		_entities.push(e);
+		var eid:Int = e.id;
+		engine.worlds[eid] = this;
+		_entities.push(eid);
 		return e;
 	}
 
@@ -82,28 +91,26 @@ class World {
 		#if debug
 		guardEntity(id);
 		#end
-		var flags:CArray<Int> = engine.flags;
-		if((flags[id] & 0x2) == 0) {
-			_toRemove.push(entity);
-			flags[id] |= 0x2;
+		if(_removeFlags.enableIfNot(id)) {
+			_toRemove.push(id);
 		}
 	}
 
 	public function invalidate() {
 		_edb.freeFromWorld(this, _toRemove, _entities);
 
-		var flags:CArray<Int> = engine.flags;
+		var updateFlags = _updateFlags;
 		var updateList = _toUpdate;
 		var startLength = updateList.length;
 		if(updateList.length > 0) {
 			var i = 0;
 			var end = updateList.length;
 			while (i < end) {
-				var e = updateList[i];
+				var eid = updateList[i];
 				for(processor in _processors) {
-					processor._internal_entityChanged(e);
+					processor._internal_entityChanged(eid);
 				}
-				flags[e] &= ~0x1;
+				updateFlags.disable(eid);
 				++i;
 			}
 			if(startLength != updateList.length) throw "update while updating";
@@ -115,20 +122,21 @@ class World {
 		#if debug
 		if(entity.world != null) throw "World is not empty before internal placing";
 		#end
-		engine.worlds[entity.id] = this;
-		_entities.push(entity);
+		var eid = entity.id;
+		engine.worlds[eid] = this;
+		_entities.push(eid);
 	}
 
 	public function unplaceInternal(entity:Entity) {
 		#if debug
 		if(entity.world != this) throw "World is BAD before internal unplacing";
 		#end
-		var id:Int = entity.id;
-		engine.worlds[id] = null;
+		var eid:Int = entity.id;
+		engine.worlds[eid] = null;
 		for(processor in _processors) {
-			processor._internal_entityChanged(id);
+			processor._internal_entityChanged(eid);
 		}
-		_entities.remove(entity);
+		_entities.remove(eid);
 	}
 
 	function register(system:System, priority:Int) {
@@ -169,9 +177,7 @@ class World {
 		#if debug
 		guardEntity(id);
 		#end
-		var flags:CArray<Int> = engine.flags;
-		if((flags[id] & 0x1) == 0) {
-			flags[id] |= 0x1;
+		if(_updateFlags.enableIfNot(id)) {
 			_toUpdate.push(id);
 		}
 	}
@@ -185,5 +191,9 @@ class World {
 
 	public function toString():String {
 		return "World";
+	}
+
+	inline public function getAllEntities() {
+		return _entities;
 	}
 }

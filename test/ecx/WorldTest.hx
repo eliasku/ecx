@@ -16,7 +16,8 @@ class WorldTest extends EcxTest {
 		Assert.notNull(world);
 		Assert.notNull(world.engine.edb);
 		Assert.notNull(world.engine.components);
-		Assert.notNull(world.engine.flags);
+		Assert.notNull(world.engine.edb.updateFlags);
+		Assert.notNull(world.engine.edb.removeFlags);
 		Assert.notNull(world.engine.worlds);
 	}
 }
