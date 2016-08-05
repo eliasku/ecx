@@ -7,7 +7,7 @@ class TypeManager {
     public var components(default, null):Array<TypeInfo> = [];
     public var systems(default, null):Array<TypeInfo> = [];
     public var lookup(default, null):Map<String, TypeInfo> = new Map();
-    public var lastComponentId(default, null):Int;
+    public var nextComponentId(default, null):Int;
 
     public function new() {
         var clist = haxe.rtti.Meta.getType(TypeManager);
@@ -32,6 +32,6 @@ class TypeManager {
             lookup.set(fullname, typeInfo);
             i += 4;
         }
-        lastComponentId = maxCid;
+        nextComponentId = maxCid + 1;
     }
 }

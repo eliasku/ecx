@@ -25,9 +25,9 @@ class Engine {
 	function new(capacity:Int) {
 		_types = new TypeManager();
 
-		components = new CArray(_types.lastComponentId + 1);
+		components = new CArray(_types.nextComponentId);
 		for(i in 0...components.length) {
-			components[i] = new CArray(capacity + 1);
+			components[i] = new CArray(capacity);
 		}
 
 		edb = new EntityManager(this, capacity);

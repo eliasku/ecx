@@ -1,6 +1,6 @@
 package ecx.managers;
 
-import ecx.ds.CRingPool;
+import ecx.ds.CRingBuffer_Int;
 import ecx.ds.CBitArray;
 import ecx.ds.CArray;
 
@@ -14,46 +14,28 @@ class EntityManager {
     public var removeFlags(default, null):CBitArray;
     public var updateFlags(default, null):CBitArray;
 
-    // TODO: should we reserve 0 index for invalid entity?
-    //var _nextId:Int = 1;
-    var _pool:CArray<Entity>;
+    var _pool:CRingBuffer_Int;
 
-    public var allocated(default, null):Int = 0;
     public var used(default, null):Int = 0;
     public var capacity(default, null):Int;
     public var available(get, never):Int;
 
-   // var _idPool:CRingPool;
-
-    inline function get_available():Int {
-        return capacity - used;
-    }
-
     public function new(engine:Engine, capacity:Int) {
         this.capacity = capacity;
 
-        //_idPool = new CRingPool(capacity);
-        var pool = new CArray(capacity);
-        var map = new CArray(capacity + 1);
-        var worlds = new CArray(capacity + 1);
-        removeFlags = new CBitArray(capacity + 1);
-        updateFlags = new CBitArray(capacity + 1);
+        _pool = new CRingBuffer_Int(capacity);
+        removeFlags = new CBitArray(capacity);
+        updateFlags = new CBitArray(capacity);
 
+        var map = new CArray<Entity>(capacity);
+        var worlds = new CArray<World>(capacity);
         var e:Entity;
-        var eid:Int = 1;
-        //var nextId:Int = 1;
-        for(i in 0...capacity) {
-            //id = nextId++;
+        for(i in 0...map.length) {
             e = new Entity();
-            e.id = eid;
+            e.id = i;
             e.engine = engine;
-            map[eid] = e;
-            pool[i] = e;
-            ++eid;
+            map[i] = e;
         }
-        allocated += capacity;
-        //_nextId = uid;
-        _pool = pool;
         this.map = map;
         this.worlds = worlds;
     }
@@ -63,11 +45,12 @@ class EntityManager {
         if(head >= capacity) {
             throw 'Out of entities, max allowed $capacity';
         }
-        var e:Entity = _pool[head];
+        var eid:Int = _pool.pop();
+        var e:Entity = map[eid];
         ++used;
 
         // TODO: if it neseccary?
-        removeFlags[e.id] = false;
+        removeFlags.disable(eid);
 
         return e;
     }
@@ -77,22 +60,21 @@ class EntityManager {
         if(entity == null) throw "Invalid argument";
         if(entity.world != null) throw "Entity is not a prefab";
         #end
-        _pool[used] = entity;
+        _pool.push(entity.id);
         --used;
     }
 
     public function freeFromWorld(world:World, list:Array<Int>, container:Array<Int>) {
-        var locPool:CArray<Entity> = _pool;
+        var locPool:CRingBuffer_Int = _pool;
         var locRemoveFlags = removeFlags;
         var locWorlds:CArray<World> = worlds;
         var locMap = map;
         var eid:Int;
+        var removedCount:Int = 0;
         while(list.length > 0) {
-            var entities:Array<Int> = container;
-            var head:Int = used;
             var count = list.length;
-            var i = count - 1;
-            while(i >= 0) {
+            var i = 0;
+            while(i < count) {
                 var eid = list[i];
                 var entity:Entity = locMap[eid];
                 #if debug
@@ -103,18 +85,20 @@ class EntityManager {
                 locWorlds[eid] = null;
                 locRemoveFlags.disable(eid);
 
-                entities.splice(entities.lastIndexOf(eid), 1);
-                --head;
-                locPool[head] = entity;
-                --i;
+                container.splice(container.lastIndexOf(eid), 1);
+                locPool.push(eid);
+                ++i;
             }
 
-            if(head < 0) throw "No way!";
-
-            used = head;
+            used -= count;
+            if(used < 0) throw "No way!";
 
             //if(startLength != removeList.length) throw "removing while removing";
             list.splice(0, count);
         }
+    }
+
+    inline function get_available():Int {
+        return capacity - used;
     }
 }
