@@ -27,4 +27,4 @@ install:
 build: off
 
 test_script:
-  - haxelib run hxmake --neko test --override-test-target="%TARGET%"
+  - haxelib run hxmake test --override-test-target="%TARGET%"

@@ -14,25 +14,32 @@ class Engine {
 
 	public static var instance(default, null):Engine;
 
-	// TYPE -> ENTITIES
+	// type id => entity id => component obj
 	public var components(default, null):CArray<CArray<Component>>;
-	public var edb(default, null):EntityManager;
-	public var entities(default, null):CArray<Entity>;
-	public var worlds(default, null):CArray<World>;
 
+	// entity id => entity obj
+	public var mapToEntity(default, null):CArray<Entity>;
+
+	// entity id => world
+	public var worlds(default, null):CArray<World>;
+	// world id => world
+	public var mapToWorld(default, null):CArray<World>;
+
+	public var worldsTotal(default, null):Int = 0;
+	public var entityManager(default, null):EntityManager;
 	var _types:TypeManager;
 
-	function new(capacity:Int) {
+	function new(capacity:Int, worldsMaxCount:Int = 1) {
 		_types = new TypeManager();
-
+		mapToWorld = new CArray(worldsMaxCount);
 		components = new CArray(_types.nextComponentId);
 		for(i in 0...components.length) {
 			components[i] = new CArray(capacity);
 		}
 
-		edb = new EntityManager(this, capacity);
-		entities = edb.map;
-		worlds = edb.worlds;
+		entityManager = new EntityManager(this, capacity);
+		mapToEntity = entityManager.map;
+		worlds = entityManager.worlds;
 	}
 
 	public static function initialize(capacity:Int = 0x40000):Engine {
@@ -44,7 +51,14 @@ class Engine {
 	}
 
 	public function createWorld(config:WorldConfig):World {
-		return new World(this, config);
+		if(worldsTotal >= mapToWorld.length) throw 'Max world count is ${mapToWorld.length}';
+		return new World(worldsTotal++, this, config);
+	}
+
+	@:nonVirtual @:unreflective
+	public function createPrefab():Entity {
+		// TODO: delete prefabs!!!
+		return mapToEntity[entityManager.alloc()];
 	}
 
 	macro static public function typeId<T>(type:ExprOf<Class<T>>):ExprOf<Int> {

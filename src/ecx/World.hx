@@ -19,6 +19,8 @@ import haxe.macro.Expr.ExprOf;
 @:access(ecx.System, ecx.Entity, ecx.Component, ecx.WorldConfig)
 class World {
 
+	public var id(default, null):Int;
+
 	var _systems:Array<System> = [];
 	var _priorities:Array<Int> = [];
 	var _lookup:Array<System> = []; // Map<Int, System>
@@ -40,9 +42,10 @@ class World {
 		return _entities.length;
 	}
 
-	function new(engine:Engine, config:WorldConfig) {
+	function new(id:Int, engine:Engine, config:WorldConfig) {
+		this.id = id;
 		this.engine = engine;
-		_edb = engine.edb;
+		_edb = engine.entityManager;
 		_updateFlags = _edb.updateFlags;
 		_removeFlags = _edb.removeFlags;
 		var systems = config._systems;
@@ -57,15 +60,15 @@ class World {
 	macro public function get<T:System>(self:ExprOf<World>, cls:ExprOf<Class<T>>):ExprOf<T> {
 		var id = ManagerMacro.id(cls);
 		//return macro @:privateAccess $self._lookup[$id]._cast($cls);
-		return macro Cast.unsafe(@:privateAccess $self._lookup[$id], $cls);
+		return macro ecx.ds.Cast.unsafe(@:privateAccess $self._lookup[$id], $cls);
 	}
 
 	public function create():Entity {
-		var e:Entity = _edb.create();
-		var eid:Int = e.id;
-		engine.worlds[eid] = this;
+		var eid = _edb.alloc();
+		var entity:Entity = _edb.map[eid];
+		_edb.worlds[eid] = this;
 		_entities.push(eid);
-		return e;
+		return entity;
 	}
 
 	public function clone(source:Entity):Entity {
@@ -184,7 +187,7 @@ class World {
 
 	#if debug
 	function guardEntity(id:Int) {
-		if(engine.entities[id] == null) throw "Null entity";
+		if(engine.mapToEntity[id] == null) throw "Null entity";
 		if(engine.worlds[id] != this) throw "Entity from another world";
 	}
 	#end

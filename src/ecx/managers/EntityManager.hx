@@ -40,27 +40,23 @@ class EntityManager {
         this.worlds = worlds;
     }
 
-    public function create():Entity {
-        var head:Int = used;
-        if(head >= capacity) {
-            throw 'Out of entities, max allowed $capacity';
-        }
+    public function alloc():Int {
+        #if debug
+        if(used >= capacity) throw 'Out of entities, max allowed $capacity';
+        #end
+
         var eid:Int = _pool.pop();
-        var e:Entity = map[eid];
         ++used;
 
-        // TODO: if it neseccary?
-        removeFlags.disable(eid);
-
-        return e;
+        return eid;
     }
 
-    public function freePrefab(entity:Entity) {
+    public function freePrefab(id:Int) {
         #if debug
-        if(entity == null) throw "Invalid argument";
-        if(entity.world != null) throw "Entity is not a prefab";
+        if(id < 0 || id >= capacity) throw "Bad entity id";
+        if(worlds[id] != null) throw "Entity is not a prefab";
         #end
-        _pool.push(entity.id);
+        _pool.push(id);
         --used;
     }
 

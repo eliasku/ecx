@@ -4,6 +4,11 @@ abstract CBitArray(CArray<Int>) {
 
     inline public function new(count:Int) {
         this = new CArray<Int>(Math.round(count / 32));
+        #if neko
+        for(i in 0...this.length) {
+            this[i] = 0;
+        }
+        #end
     }
 
     inline public function enable(index:Int) {

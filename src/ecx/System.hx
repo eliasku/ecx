@@ -122,10 +122,10 @@ class Family {
 	var _required:Array<Int>;
 
 	function new(system:System) {
-		activeBits = new CBitArray(system.world.engine.edb.capacity + 1);
+		activeBits = new CBitArray(system.world.engine.entityManager.capacity + 1);
 		this.system = system;
 		_componentsByType = system.engine.components;
-		_entityMap = system.engine.entities;
+		_entityMap = system.engine.mapToEntity;
 	}
 
 	inline function require(required:Array<Int>):Family {

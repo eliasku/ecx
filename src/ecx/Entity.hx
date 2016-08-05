@@ -56,12 +56,6 @@ class Entity {
 	}
 
 	@:nonVirtual @:unreflective
-	public static function prefab():Entity {
-		// TODO: delete prefabs!!!
-		return Engine.instance.edb.create();
-	}
-
-	@:nonVirtual @:unreflective
 	function _add<T:Component>(typeId:Int, component:T):T {
 		// workaround for old hxcpp
 		var comp:Component = component;
