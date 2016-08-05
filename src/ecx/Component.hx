@@ -53,14 +53,6 @@ class Component {
 		return null;
 	}
 
-//	@:extern inline function _cast<T:Component>(clazz:Class<T>):T {
-//		#if (cpp && haxe_ver >= 3.3)
-//		return cpp.Pointer.fromRaw(cpp.Pointer.addressOf(this).rawCast()).value;
-//		#else
-//		return cast this;
-//		#end
-//	}
-
 	inline function get_world() {
 		return entity != null ? entity.world : null;
 	}

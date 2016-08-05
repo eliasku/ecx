@@ -1,6 +1,7 @@
 package ecx.types;
 
 @:final
+@:unreflective
 @:access(ecx.types.TypeInfo)
 class TypeManager {
 

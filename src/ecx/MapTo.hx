@@ -10,6 +10,9 @@ private typedef MTD<T> = CArray<T>;
 #end
 
 @:generic
+@:final
+@:unreflective
+@:dce
 abstract MapTo<T>(MTD<T>) {
 
 	@:generic inline public function new<T>(arr:MTD<T>) {

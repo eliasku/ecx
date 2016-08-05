@@ -9,7 +9,7 @@ import ecx.ds.CArray;
 @:access(ecx.Entity, ecx.World)
 class EntityManager {
 
-    public var map(default, null):CArray<Entity>;
+    public var entities(default, null):CArray<Entity>;
     public var worlds(default, null):CArray<World>;
     public var removeFlags(default, null):CBitArray;
     public var updateFlags(default, null):CBitArray;
@@ -36,7 +36,7 @@ class EntityManager {
             e.engine = engine;
             map[i] = e;
         }
-        this.map = map;
+        this.entities = map;
         this.worlds = worlds;
     }
 
@@ -64,7 +64,7 @@ class EntityManager {
         var locPool:CRingBuffer_Int = _pool;
         var locRemoveFlags = removeFlags;
         var locWorlds:CArray<World> = worlds;
-        var locMap = map;
+        var locMap = entities;
         var eid:Int;
         var removedCount:Int = 0;
         while(list.length > 0) {

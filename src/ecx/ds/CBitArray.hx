@@ -1,5 +1,8 @@
 package ecx.ds;
 
+@:final
+@:unreflective
+@:dce
 abstract CBitArray(CArray<Int>) {
 
     inline public function new(count:Int) {

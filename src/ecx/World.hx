@@ -1,8 +1,8 @@
 package ecx;
 
+import ecx.ds.CArray;
 import ecx.ds.Cast;
 import ecx.ds.CBitArray;
-import ecx.ds.CArray;
 import ecx.managers.EntityManager;
 import ecx.macro.ManagerMacro;
 import haxe.macro.Expr.ExprOf;
@@ -33,6 +33,7 @@ class World {
 	// global ref
 	public var engine(default, null):Engine;
 	var _edb:EntityManager;
+	var _mapToEntity:CArray<Entity>;
 	var _updateFlags:CBitArray;
 	var _removeFlags:CBitArray;
 
@@ -48,6 +49,7 @@ class World {
 		_edb = engine.entityManager;
 		_updateFlags = _edb.updateFlags;
 		_removeFlags = _edb.removeFlags;
+		_mapToEntity = _edb.entities;
 		var systems = config._systems;
 		var priorities = config._priorities;
 		var total = systems.length;
@@ -59,13 +61,12 @@ class World {
 
 	macro public function get<T:System>(self:ExprOf<World>, cls:ExprOf<Class<T>>):ExprOf<T> {
 		var id = ManagerMacro.id(cls);
-		//return macro @:privateAccess $self._lookup[$id]._cast($cls);
 		return macro ecx.ds.Cast.unsafe(@:privateAccess $self._lookup[$id], $cls);
 	}
 
 	public function create():Entity {
 		var eid = _edb.alloc();
-		var entity:Entity = _edb.map[eid];
+		var entity:Entity = _mapToEntity[eid];
 		_edb.worlds[eid] = this;
 		_entities.push(eid);
 		return entity;

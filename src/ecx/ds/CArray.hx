@@ -18,6 +18,9 @@ private typedef CArrayData<T> = Array<T>;
 	Dense Fixed-size array (CArray is const-size array)
 **/
 @:generic
+@:final
+@:unreflective
+@:dce
 abstract CArray<T>(CArrayData<T>) {
 
 	public var length(get, never):Int;

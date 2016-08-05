@@ -38,7 +38,7 @@ class Engine {
 		}
 
 		entityManager = new EntityManager(this, capacity);
-		mapToEntity = entityManager.map;
+		mapToEntity = entityManager.entities;
 		worlds = entityManager.worlds;
 	}
 

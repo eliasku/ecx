@@ -1,5 +1,7 @@
 package ecx;
 
+@:final
+@:unreflective
 class WorldConfig {
 
 	var _systems:Array<System> = [];

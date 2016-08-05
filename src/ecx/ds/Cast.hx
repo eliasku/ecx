@@ -2,7 +2,6 @@ package ecx.ds;
 
 @:final
 @:unreflective
-@:native
 @:dce
 class Cast {
 

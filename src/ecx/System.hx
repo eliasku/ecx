@@ -74,16 +74,6 @@ class System {
 		return family.entities;
 	}
 
-//	@:nonVirtual @:unreflective @:extern
-//	inline function _cast<T:System>(clazz:Class<T>):T {
-//		#if cpp
-//		//return cpp.Pointer.addressOf(this).rawCast()[0];
-//		return cpp.Pointer.fromRaw(cpp.Pointer.addressOf(this).rawCast()).value;
-//		#else
-//		return cast this;
-//		#end
-//	}
-
 	@:nonVirtual @:unreflective @:extern
 	inline function _isIdle():Bool {
 		return (_flags & Flags.IDLE) != 0;
@@ -103,7 +93,7 @@ class System {
 	// system is not a part of game loop, update method is not called every frame
 	var IDLE = 2;
 
-	// TODO: system only initialize something, so it will be removed after initialization
+	// system only initialize something, so it will be removed after initialization
 	var CONFIG = 4;
 }
 
@@ -113,34 +103,34 @@ class System {
 @:access(ecx.System, ecx.Entity)
 class Family {
 
-	var _componentsByType:CArray<CArray<Component>>;
-	var _entityMap:CArray<Entity>;
-	public var system(default, null):System;
 	public var entities(default, null):Array<Entity> = [];
-	public var activeBits(default, null):CBitArray;
 
-	var _required:Array<Int>;
+	var _mapToEntity:CArray<Entity>;
+	var _activeBits:CBitArray;
+	var _requiredComponents:CArray<CArray<Component>>;
+	var _system:System;
 
 	function new(system:System) {
-		activeBits = new CBitArray(system.world.engine.entityManager.capacity + 1);
-		this.system = system;
-		_componentsByType = system.engine.components;
-		_entityMap = system.engine.mapToEntity;
+		var engine = system.engine;
+		_system = system;
+		_activeBits = new CBitArray(engine.entityManager.capacity);
+		_mapToEntity = engine.mapToEntity;
 	}
 
-	inline function require(required:Array<Int>):Family {
-		_required = required;
+	inline function require(requiredTypeIds:Array<Int>):Family {
+		_requiredComponents = new CArray(requiredTypeIds != null ? requiredTypeIds.length : 0);
+		for(i in 0..._requiredComponents.length) {
+			_requiredComponents[i] = _system.engine.components[requiredTypeIds[i]];
+		}
 		return this;
 	}
 
 	@:nonVirtual @:unreflective
 	function checkEntity(entityId:Int) {
-		if(_required != null) {
-			var componentsByType = _componentsByType;
-			for(requiredId in _required) {
-				if(componentsByType[requiredId][entityId] == null) {
-					return false;
-				}
+		var rc = _requiredComponents;
+		for(i in 0...rc.length) {
+			if(rc[i][entityId] == null) {
+				return false;
 			}
 		}
 		return true;
@@ -150,21 +140,17 @@ class Family {
 	@:nonVirtual @:unreflective
 	function _internal_entityChanged(entityId:Int, worldMatch:Bool) {
 		var fits = worldMatch && checkEntity(entityId);
-		var entity = _entityMap[entityId];
-		//var address = entityId >>> 5;
-		//var mask = 1 << (entityId & 0x1F);
-		var isActive = activeBits.get(entityId);
+		var entity = _mapToEntity[entityId];
+		var isActive = _activeBits.get(entityId);
 		if(fits && !isActive) {
-			activeBits.enable(entityId);
-			//this.active[address] |= mask;
+			_activeBits.enable(entityId);
 			entities.push(entity);
-			system.onEntityAdded(entity, this);
+			_system.onEntityAdded(entity, this);
 		}
 		else if(!fits && isActive) {
-			activeBits.disable(entityId);
-			//this.active[address] &= ~mask;
+			_activeBits.disable(entityId);
 			entities.remove(entity);
-			system.onEntityRemoved(entity, this);
+			_system.onEntityRemoved(entity, this);
 		}
 	}
 }
