@@ -6,7 +6,7 @@ package ecx.ds;
 abstract CBitArray(CArray<Int>) {
 
     inline public function new(count:Int) {
-        this = new CArray<Int>(Math.round(count / 32));
+        this = new CArray<Int>(Math.ceil(count / 32));
         #if neko
         for(i in 0...this.length) {
             this[i] = 0;
@@ -35,8 +35,9 @@ abstract CBitArray(CArray<Int>) {
     inline public function enableIfNot(index:Int):Bool {
         var a = address(index);
         var m = mask(index);
-        if((this[a] & m) == 0) {
-            this[a] |= m;
+        var v = this[a];
+        if((v & m) == 0) {
+            this[a] = v | m;
             return true;
         }
         return false;

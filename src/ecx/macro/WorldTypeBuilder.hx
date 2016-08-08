@@ -183,7 +183,7 @@ class WorldTypeBuilder {
 							if(m.name == ":family") {
 								var fieldName = field.name;
 								exprs.push(macro {
-									$i{field.name} = _family($a{m.params});
+									@:pos(${Context.currentPos()}) $i{field.name} = _family($a{m.params});
 								});
 							}
 						}

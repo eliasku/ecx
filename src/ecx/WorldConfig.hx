@@ -1,6 +1,5 @@
 package ecx;
 
-@:final
 @:unreflective
 class WorldConfig {
 

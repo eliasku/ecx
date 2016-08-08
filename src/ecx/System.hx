@@ -36,8 +36,8 @@ class System {
 	function initialize() {}
 	function update() {}
 
-	function onEntityAdded(entity:Entity, family:Family) {}
-	function onEntityRemoved(entity:Entity, family:Family) {}
+	function onEntityAdded(entityId:Int, family:Family) {}
+	function onEntityRemoved(entityId:Int, family:Family) {}
 
 	function _inject() {}
 
@@ -65,7 +65,7 @@ class System {
 	}
 
 	@:nonVirtual @:unreflective
-	function _addFamily(family:Family):Array<Entity> {
+	function _addFamily(family:Family):Array<Int> {
 		if(_families == null) {
 			_families = [];
 			_flags = _flags | Flags.PROCESSOR;
@@ -103,18 +103,16 @@ class System {
 @:access(ecx.System, ecx.Entity)
 class Family {
 
-	public var entities(default, null):Array<Entity> = [];
+	public var entities(default, null):Array<Int> = [];
 
-	var _mapToEntity:CArray<Entity>;
 	var _activeBits:CBitArray;
 	var _requiredComponents:CArray<CArray<Component>>;
 	var _system:System;
 
 	function new(system:System) {
-		var engine = system.engine;
+		var capacity = system.engine.entityManager.capacity;
+		_activeBits = new CBitArray(capacity);
 		_system = system;
-		_activeBits = new CBitArray(engine.entityManager.capacity);
-		_mapToEntity = engine.mapToEntity;
 	}
 
 	inline function require(requiredTypeIds:Array<Int>):Family {
@@ -140,17 +138,16 @@ class Family {
 	@:nonVirtual @:unreflective
 	function _internal_entityChanged(entityId:Int, worldMatch:Bool) {
 		var fits = worldMatch && checkEntity(entityId);
-		var entity = _mapToEntity[entityId];
 		var isActive = _activeBits.get(entityId);
 		if(fits && !isActive) {
 			_activeBits.enable(entityId);
-			entities.push(entity);
-			_system.onEntityAdded(entity, this);
+			entities.push(entityId);
+			_system.onEntityAdded(entityId, this);
 		}
 		else if(!fits && isActive) {
 			_activeBits.disable(entityId);
-			entities.remove(entity);
-			_system.onEntityRemoved(entity, this);
+			entities.remove(entityId);
+			_system.onEntityRemoved(entityId, this);
 		}
 	}
 }

@@ -19,16 +19,8 @@ abstract MapTo<T>(MTD<T>) {
 		this = arr;
 	}
 
-	inline public function get(entity:Entity):T {
-		#if (flash||cs||java)
-		return cast this[entity.id];
-		#else
-		return this[entity.id];
-		#end
-	}
-
 	@:arrayAccess
-	inline public function getFast(id:Int):T {
+	inline public function get(id:Int):T {
 		#if (flash||cs||java)
 		return cast this[id];
 		#else

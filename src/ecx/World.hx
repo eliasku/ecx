@@ -1,5 +1,6 @@
 package ecx;
 
+import eggs.debug.Debug;
 import ecx.ds.CArray;
 import ecx.ds.Cast;
 import ecx.ds.CBitArray;
@@ -90,13 +91,19 @@ class World {
 		return entity;
 	}
 
-	public function delete(entity:Entity) {
-		var id:Int = entity.id;
+	inline public function delete(entity:Entity) {
 		#if debug
-		guardEntity(id);
+		if(entity == null) throw "Null entity wrapper";
 		#end
-		if(_removeFlags.enableIfNot(id)) {
-			_toRemove.push(id);
+		deleteById(entity.id);
+	}
+
+	public function deleteById(entityId:Int) {
+		#if debug
+		guardEntity(entityId);
+		#end
+		if(_removeFlags.enableIfNot(entityId)) {
+			_toRemove.push(entityId);
 		}
 	}
 
@@ -199,5 +206,12 @@ class World {
 
 	inline public function getAllEntities() {
 		return _entities;
+	}
+
+	// TODO: extract to Debug tools
+	public function traceSystems() {
+		for(system in _systems) {
+			Debug.log('System: ${Type.getClassName(Type.getClass(system))}');
+		}
 	}
 }
