@@ -1,5 +1,6 @@
 package ecx.macro;
 
+import ecx.types.TypeKind;
 import haxe.rtti.Meta;
 import haxe.macro.Expr.ComplexType;
 import ecx.macro.MacroUtil;
@@ -14,7 +15,7 @@ class WorldTypeBuilder {
 	static var CACHE:Map<Int, Map<String, WorldTypeInfo>> = new Map();
 	static var processTypesEnabled:Bool = false;
 
-	public static function build(kind:Int):Array<Field> {
+	public static function build(kind:TypeKind):Array<Field> {
 		var cls:ClassType = Context.getLocalClass().get();
 		if(cls.isExtern) {
 			cls.exclude();
@@ -29,17 +30,18 @@ class WorldTypeBuilder {
 		}
 
 		var pos = Context.currentPos();
-		if(kind == 0) {
+		if(kind == TypeKind.COMPONENT) {
 			cls.meta.add(":unreflective", [], Context.currentPos());
 			//cls.meta.add(":final", [], Context.currentPos());
+			//cls.meta.add(":keep", [], Context.currentPos());
 		}
 
 		var typeInfo = getTypeInfo(kind, cls);
 		var typeKind = Context.makeExpr(kind, pos);
-		var typeName = Context.makeExpr(typeInfo.basePath, pos);
+		var typeBasePath = Context.makeExpr(typeInfo.basePath, pos);
 		var typePath = Context.makeExpr(typeInfo.path, pos);
-		var typeId = Context.makeExpr(typeInfo.id, pos);
-		var typeIndex = Context.makeExpr(typeInfo.index, pos);
+		var typeId = Context.makeExpr(typeInfo.typeId, pos);
+		var specId = Context.makeExpr(typeInfo.specId, pos);
 		var tp = {
 			pack: cls.pack,
 			name: cls.name,
@@ -48,14 +50,17 @@ class WorldTypeBuilder {
 		};
 		var componentType:ComplexType = ComplexType.TPath(tp);
 
+		var tpType = getTypePathForType(kind, false);
+		var tpSpec = getTypePathForType(kind, true);
+
 		//traceCurrentType(DEPTH, typeInfo);
 
 		var fields:Array<Field> = Context.getBuildFields();
 		var fieldsExpr = macro {
-			var public_Xstatic_Xinline_X_TYPE_ID = $typeId;
-			var public_Xstatic_Xinline_X_TYPE_INDEX = $typeIndex;
-			function override_X_typeId():Int { return $typeId; }
-			function override_X_typeIndex():Int { return $typeIndex; }
+			var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
+			var public_Xstatic_Xinline_X_SPEC_ID = $specId;
+			function override_X__getType() { return new $tpType($typeId); }
+			function override_X__getSpec() { return new $tpSpec($specId); }
 		}
 		var idFields = MacroUtil.buildFields(fieldsExpr);
 		fields = fields.concat(idFields);
@@ -68,17 +73,29 @@ class WorldTypeBuilder {
 		}
 
 		if(kind == 0 && hasConstructor) {
+			var collectionTypePath = {
+				pack: ["ecx", "ds"],
+				name: "CArray",
+				params: [TypeParam.TPType(componentType)],
+				sub: null
+			};
 			var cloneExpr = macro {
 				function override_Xpublic_X_newInstance():ecx.Component {
 					return new $tp();
 				}
+
+			// TODO: typed component storage
+//				function static_Xprivate_X_allocTypedArray(capacity:Int):Dynamic {
+//					trace("ALLOC: " + _TYPE_ID);
+//					return new $collectionTypePath(capacity);
+//				}
 			}
 
 			var cloneFields = MacroUtil.buildFields(cloneExpr);
 			fields = fields.concat(cloneFields);
 		}
 
-		if(kind == 1) {
+		if(kind == TypeKind.SYSTEM) {
 			var injExprs:Array<Expr> = [];
 			addConfigurator(cls, fields, injExprs);
 			addInjectors(fields, injExprs);
@@ -87,6 +104,11 @@ class WorldTypeBuilder {
 		--DEPTH;
 
 		return fields;
+	}
+
+	static function getTypePathForType(kind:TypeKind, spec:Bool) {
+		var name = (kind == TypeKind.COMPONENT ? "Component" : "System") + (spec ? "Spec" : "Type");
+		return { pack: ["ecx", "types"], name: name, params: [], sub: null };
 	}
 
 	static function processTypes(types:Array<Type>) {
@@ -99,10 +121,11 @@ class WorldTypeBuilder {
 					var map:Map<String, WorldTypeInfo> = CACHE.get(kind);
 					for(ti in map) {
 						exprs = exprs.concat([
-							macro $v{ti.path},
 							macro $v{ti.kind},
-							macro $v{ti.index},
-							macro $v{ti.id}
+							macro $v{ti.path},
+							macro $v{ti.basePath},
+							macro $v{ti.specId},
+							macro $v{ti.typeId}
 						]);
 					}
 				}
@@ -113,9 +136,9 @@ class WorldTypeBuilder {
 
 	static function traceCurrentType(depth:Int, typeInfo:WorldTypeInfo) {
 		var indent = repeatString("-", depth - 1);
-		var kind = typeInfo.kind == 0 ? "(C)" : "[S]";
+		var kind = typeInfo.kind == TypeKind.COMPONENT ? "(C)" : "[S]";
 		var base = typeInfo.path == typeInfo.basePath ? "" : ' <${typeInfo.basePath}>';
-		trace('$indent> $kind ${typeInfo.path}$base #${typeInfo.id}');
+		trace('$indent> $kind ${typeInfo.path}$base #${typeInfo.typeId}');
 	}
 
 	static function addInjectors(fields:Array<Field>, exprs:Array<Expr>) {
@@ -167,12 +190,12 @@ class WorldTypeBuilder {
 	static function addConfigurator(cls:ClassType, fields:Array<Field>, exprs:Array<Expr>) {
 		if(cls.meta.has(":idle")) {
 			exprs.push(macro {
-				_flags = _flags | @:privateAccess (ecx.System.Flags.IDLE);
+				_flags = _flags.add(ecx.types.SystemFlags.IDLE);
 			});
 		}
 		if(cls.meta.has(":config")) {
 			exprs.push(macro {
-				_flags = _flags | @:privateAccess (ecx.System.Flags.CONFIG);
+				_flags = _flags.add(ecx.types.SystemFlags.CONFIG);
 			});
 		}
 		for(field in fields) {
@@ -207,7 +230,7 @@ class WorldTypeBuilder {
 		return fields;
 	}
 
-	static function getTypeInfo(kind:Int, cl:ClassType):WorldTypeInfo {
+	static function getTypeInfo(kind:TypeKind, cl:ClassType):WorldTypeInfo {
 		var baseClass = cl;
 		// Traverse up to the last non-component base
 		while(!extendsBaseType(baseClass)) {
@@ -230,7 +253,7 @@ class WorldTypeBuilder {
 			if(baseFullName != fullName) {
 				for(baseInfo in map) {
 					if(baseInfo.basePath == baseFullName) {
-						baseTypeId = baseInfo.id;
+						baseTypeId = baseInfo.typeId;
 						break;
 					}
 				}
@@ -274,8 +297,8 @@ class WorldTypeBuilder {
 
 class WorldTypeInfo {
 
-	static var NEXT_ID:Array<Int> = [0, 0];
-	static var NEXT_INDEX:Array<Int> = [0, 0];
+	static var NEXT_TYPE_ID:Array<Int> = [0, 0];
+	static var NEXT_SPEC_ID:Array<Int> = [0, 0];
 
 	// Base Family full name (some.foo.Bar)
 	public var basePath(default, null):String;
@@ -283,20 +306,20 @@ class WorldTypeInfo {
 	// Full class path (some.foo.Bar)
 	public var path(default, null):String;
 
-	// kind of type: 0 - component, 1 - system
-	public var kind(default, null):Int;
+	// kind of type (component or system)
+	public var kind(default, null):TypeKind;
 
 	// common base type id
-	public var id(default, null):Int;
+	public var typeId(default, null):Int;
 
 	// specific unique type index for implementations
-	public var index(default, null):Int;
+	public var specId(default, null):Int;
 
-	public function new(kind:Int, basePath:String, path:String, baseId:Int = -1) {
+	public function new(kind:TypeKind, basePath:String, path:String, baseTypeId:Int = -1) {
 		this.kind = kind;
 		this.basePath = basePath;
 		this.path = path;
-		id = baseId >= 0 ? baseId : (NEXT_ID[kind]++);
-		index = NEXT_INDEX[kind]++;
+		typeId = baseTypeId >= 0 ? baseTypeId : (NEXT_TYPE_ID[kind]++);
+		specId = NEXT_SPEC_ID[kind]++;
 	}
 }

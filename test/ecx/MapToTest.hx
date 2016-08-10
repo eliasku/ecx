@@ -12,10 +12,10 @@ class MapToTest extends EcxTest {
 
     public function testMapTo() {
         var values:MapTo<Value> = world.engine.mapTo(Value);
-        var e = world.create();
+        var e = world.createEntity();
         var v = e.create(Value);
         Assert.isTrue(v == values[e.id]);
-        Assert.isTrue(v == values.get(e));
+        Assert.isTrue(v == values.get(e.id));
         Assert.isNull(values[0]);
     }
 }

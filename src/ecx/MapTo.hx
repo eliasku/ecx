@@ -3,28 +3,30 @@ package ecx;
 import ecx.ds.CArray;
 
 // TODO: cs & java arrays covariance
+// TODO: typed component storage
+
 #if (flash||cs||java)
-private typedef MTD<T> = CArray<Component>;
+private typedef MapToData<T> = CArray<Component>;
 #else
-private typedef MTD<T> = CArray<T>;
+private typedef MapToData<T> = CArray<T>;
 #end
 
 @:generic
 @:final
 @:unreflective
 @:dce
-abstract MapTo<T>(MTD<T>) {
+abstract MapTo<T:Component>(MapToData<T>) {
 
-	@:generic inline public function new<T>(arr:MTD<T>) {
+	@:generic inline public function new<T:Component>(arr:MapToData<T>) {
 		this = arr;
 	}
 
 	@:arrayAccess
-	inline public function get(id:Int):T {
+	inline public function get(entity:Int):T {
 		#if (flash||cs||java)
-		return cast this[id];
+		return cast this[entity];
 		#else
-		return this[id];
+		return this[entity];
 		#end
 	}
 }

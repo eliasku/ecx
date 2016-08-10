@@ -12,7 +12,7 @@ class IssuesTest extends EcxTest {
 	}
 
 	public function testAccess() {
-		var e = world.create();
+		var e = world.createEntity();
 		e.create(Value);
 		Assert.notNull(e.get(Value));
 		Assert.equals(0, e.get(Value).value);
@@ -26,17 +26,17 @@ class IssuesTest extends EcxTest {
 	}
 
 	public function testClone() {
-		var e1 = world.create();
+		var e1 = world.createEntity();
 		e1.create(Value);
-		var e2 = world.create();
-		var e3 = world.clone(e1);
-		var e4 = world.clone(e2);
+		var e2 = world.createEntity();
+		var e3 = world.cloneEntity(e1);
+		var e4 = world.cloneEntity(e2);
 		Assert.isTrue(e3.has(Value));
 		Assert.isFalse(e4.has(Value));
 	}
 
 	public function testComponentsTraversal() {
-		var e:Entity = world.create();
+		var e:Entity = world.createEntity();
 		e.create(Value);
 		e.create(TestPosition);
 		var keys = [];
@@ -56,12 +56,12 @@ class IssuesTest extends EcxTest {
 		var expectedEntitiesCount:Int = world.entitiesTotal;
 
 		// entity need to be created once!
-		Assert.isNull(world.create().get(TestPosition));
+		Assert.isNull(world.createEntity().get(TestPosition));
 		expectedEntitiesCount++;
 
 		// entity need to be created once!
 		var e:Entity = null;
-		Assert.isNull((e != world.create() ? e : e).tryGet(TestPosition));
+		Assert.isNull((e != world.createEntity() ? e : e).tryGet(TestPosition));
 		expectedEntitiesCount++;
 
 		Assert.equals(expectedEntitiesCount, world.entitiesTotal);

@@ -1,6 +1,7 @@
 package ecx;
 
-import eggs.debug.Debug;
+import ecx.types.SystemFlags;
+import ecx.types.ComponentType;
 import ecx.ds.CArray;
 import ecx.ds.Cast;
 import ecx.ds.CBitArray;
@@ -28,15 +29,15 @@ class World {
 	var _processors:Array<System> = [];
 
 	var _entities:Array<Int> = [];
-	var _toUpdate:Array<Int> = [];
-	var _toRemove:Array<Int> = [];
+	var _changeList:Array<Int> = [];
+	var _removeList:Array<Int> = [];
 
 	// global ref
 	public var engine(default, null):Engine;
 	var _edb:EntityManager;
 	var _mapToEntity:CArray<Entity>;
-	var _updateFlags:CBitArray;
-	var _removeFlags:CBitArray;
+	var _changedFlags:CBitArray;
+	var _removedFlags:CBitArray;
 
 	public var entitiesTotal(get, never):Int;
 
@@ -48,8 +49,8 @@ class World {
 		this.id = id;
 		this.engine = engine;
 		_edb = engine.entityManager;
-		_updateFlags = _edb.updateFlags;
-		_removeFlags = _edb.removeFlags;
+		_changedFlags = _edb.updateFlags;
+		_removedFlags = _edb.removeFlags;
 		_mapToEntity = _edb.entities;
 		var systems = config._systems;
 		var priorities = config._priorities;
@@ -60,66 +61,80 @@ class World {
 		initialize();
 	}
 
-	macro public function get<T:System>(self:ExprOf<World>, cls:ExprOf<Class<T>>):ExprOf<T> {
-		var id = ManagerMacro.id(cls);
-		return macro ecx.ds.Cast.unsafe(@:privateAccess $self._lookup[$id], $cls);
+	macro public function get<T:System>(self:ExprOf<World>, systemClass:ExprOf<Class<T>>):ExprOf<T> {
+		var systemType = ManagerMacro.systemType(systemClass);
+		return macro ecx.ds.Cast.unsafe_T(@:privateAccess $self._lookup[$systemType.id]);
 	}
 
-	public function create():Entity {
-		var eid = _edb.alloc();
-		var entity:Entity = _mapToEntity[eid];
-		_edb.worlds[eid] = this;
-		_entities.push(eid);
+	inline public function createEntity():Entity {
+		return _mapToEntity[create()];
+	}
+
+	// Recommended
+	public function create():Int {
+		var entity = _edb.alloc();
+		_edb.worlds[entity] = this;
+		_entities.push(entity);
 		return entity;
 	}
 
-	public function clone(source:Entity):Entity {
+	public function cloneEntity(source:Entity):Entity {
+		return _mapToEntity[clone(source.id)];
+	}
+
+	public function clone(source:Int):Int {
 		var entity = create();
+		// TODO: if we move _add to entity-manager, so we could not use wrapper?
+		var entityEdit:Entity = _mapToEntity[entity];
 		var componentsByType = engine.components;
-		var sourceId = source.id;
-		for(cid in 0...componentsByType.length) {
-			var component:Component = componentsByType[cid][sourceId];
-			//trace("ID: " + id + " CID: " + cid + " | " + component);
+		for(componentTypeId in 0...componentsByType.length) {
+			var component:Component = componentsByType[componentTypeId][source];
 			if(component != null) {
 				var cloned = component._newInstance();
-				//trace(cloned);
-				entity._add(cid, cloned);
-				//trace(cid + " : " + componentsByType[cid][id]);
+				entityEdit._add(new ComponentType(componentTypeId), cloned);
 				cloned.copyFrom(component);
 			}
 		}
 		return entity;
 	}
 
-	inline public function delete(entity:Entity) {
+	// TODO: EntityEdit::dispose() ?
+	inline public function deleteEntity(instance:Entity) {
 		#if debug
-		if(entity == null) throw "Null entity wrapper";
+		if(instance == null) throw "Null entity wrapper";
 		#end
-		deleteById(entity.id);
+		delete(instance.id);
 	}
 
-	public function deleteById(entityId:Int) {
+	// TODO: should be delete
+	public function delete(entity:Int) {
 		#if debug
-		guardEntity(entityId);
+		guardEntity(entity);
 		#end
-		if(_removeFlags.enableIfNot(entityId)) {
-			_toRemove.push(entityId);
+		if(_removedFlags.enableIfNot(entity)) {
+			_removeList.push(entity);
 		}
 	}
 
 	public function invalidate() {
-		_edb.freeFromWorld(this, _toRemove, _entities);
 
-		var updateFlags = _updateFlags;
-		var updateList = _toUpdate;
+		#if debug
+		lockFamilies();
+		#end
+
+		_edb.freeFromWorld(this, _removeList, _entities);
+
+		var updateFlags = _changedFlags;
+		var updateList = _changeList;
 		var startLength = updateList.length;
 		if(updateList.length > 0) {
 			var i = 0;
 			var end = updateList.length;
 			while (i < end) {
 				var eid = updateList[i];
+				var worldMatched = _edb.worlds[eid] == this;
 				for(processor in _processors) {
-					processor._internal_entityChanged(eid);
+					processor._internal_entityChanged(eid, worldMatched);
 				}
 				updateFlags.disable(eid);
 				++i;
@@ -127,7 +142,53 @@ class World {
 			if(startLength != updateList.length) throw "update while updating";
 			updateList.splice(0, end);
 		}
+
+		#if debug
+		guardFamilies();
+		unlockFamilies();
+		#end
 	}
+
+	#if debug
+	function guardFamilies() {
+		for(system in _systems) {
+			if(system._families == null) {
+				// not processor
+				continue;
+			}
+			for(family in system._families) {
+				for(entity in family.entities) {
+					if(entity < 0) throw 'FAMILY GUARD: Bad entity $entity';
+					if(_edb.worlds[entity] == null) throw 'FAMILY GUARD: $entity is deleted from world, but in family';
+				}
+			}
+		}
+	}
+
+	function lockFamilies() {
+		for(system in _systems) {
+			if(system._families == null) {
+				// not processor
+				continue;
+			}
+			for(family in system._families) {
+				family.debugLock();
+			}
+		}
+	}
+
+	function unlockFamilies() {
+		for(system in _systems) {
+			if(system._families == null) {
+				// not processor
+				continue;
+			}
+			for(family in system._families) {
+				family.debugUnlock();
+			}
+		}
+	}
+	#end
 
 	public function placeInternal(entity:Entity) {
 		#if debug
@@ -142,16 +203,16 @@ class World {
 		#if debug
 		if(entity.world != this) throw "World is BAD before internal unplacing";
 		#end
-		var eid:Int = entity.id;
-		engine.worlds[eid] = null;
+		var entityId:Int = entity.id;
+		_edb.worlds[entityId] = null;
 		for(processor in _processors) {
-			processor._internal_entityChanged(eid);
+			processor._internal_entityChanged(entityId, false);
 		}
-		_entities.remove(eid);
+		_entities.remove(entityId);
 	}
 
 	function register(system:System, priority:Int) {
-		_lookup[system._typeId()] = system;
+		_lookup[system.__getType().id] = system;
 		_systems.push(system);
 		_priorities.push(priority);
 	}
@@ -177,7 +238,7 @@ class World {
 		// clear config systems
 		var i = _systems.length - 1;
 		while(i >= 0) {
-			if((_systems[i]._flags & System.Flags.CONFIG) != 0) {
+			if(_systems[i]._flags.has(SystemFlags.CONFIG)) {
 				_systems.splice(i, 1);
 			}
 			--i;
@@ -188,8 +249,8 @@ class World {
 		#if debug
 		guardEntity(id);
 		#end
-		if(_updateFlags.enableIfNot(id)) {
-			_toUpdate.push(id);
+		if(_changedFlags.enableIfNot(id)) {
+			_changeList.push(id);
 		}
 	}
 
@@ -201,17 +262,10 @@ class World {
 	#end
 
 	public function toString():String {
-		return "World";
+		return 'World #$id';
 	}
 
 	inline public function getAllEntities() {
 		return _entities;
-	}
-
-	// TODO: extract to Debug tools
-	public function traceSystems() {
-		for(system in _systems) {
-			Debug.log('System: ${Type.getClassName(Type.getClass(system))}');
-		}
 	}
 }

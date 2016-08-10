@@ -1,5 +1,9 @@
 package ecx;
 
+import ecx.types.TypeKind;
+import ecx.types.ComponentType;
+import ecx.types.ComponentSpec;
+
 /**
 	Component contains data for enabling behaviours for entity
 	1. Data can be serialized / deserialized
@@ -41,12 +45,12 @@ class Component {
 	function onRemoved() {}
 	function copyFrom(source:Component) {}
 
-	function _typeId():Int {
-		return -1;
+	function __getType():ComponentType {
+		return ComponentType.INVALID;
 	}
 
-	function _typeIndex():Int {
-		return -1;
+	function __getSpec():ComponentSpec {
+		return ComponentSpec.INVALID;
 	}
 
 	function _newInstance():Component {
@@ -58,6 +62,6 @@ class Component {
 	}
 
 	inline function toString():String {
-		return 'Component #${_typeId()} (${_typeIndex()})';
+		return 'Component(Type: #${__getType().id}, Spec: #${__getSpec().id})';
 	}
 }

@@ -29,12 +29,8 @@ class EntityManager {
 
         var map = new CArray<Entity>(capacity);
         var worlds = new CArray<World>(capacity);
-        var e:Entity;
-        for(i in 0...map.length) {
-            e = new Entity();
-            e.id = i;
-            e.engine = engine;
-            map[i] = e;
+        for(id in 0...map.length) {
+            map[id] = new Entity(id, engine);
         }
         this.entities = map;
         this.worlds = worlds;
@@ -77,6 +73,7 @@ class EntityManager {
                 if(world != locWorlds[eid]) throw "Bad world on freeFromWorld";
                 #end
                 entity._clear();
+                // TODO: we 100% sure to delete it from families :)
                 world._internal_entityChanged(eid);
                 locWorlds[eid] = null;
                 locRemoveFlags.disable(eid);

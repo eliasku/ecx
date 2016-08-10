@@ -1,5 +1,7 @@
 package ecx;
 
+import ecx.types.ComponentType;
+import ecx.ds.Cast;
 import ecx.types.TypeInfo;
 import ecx.ds.CArray;
 import ecx.managers.EntityManager;
@@ -17,6 +19,9 @@ class Engine {
 	// type id => entity id => component obj
 	public var components(default, null):CArray<CArray<Component>>;
 
+	// TODO: typed component storage
+//	public var components(default, null):CArray<Dynamic>;
+
 	// entity id => entity obj
 	public var mapToEntity(default, null):CArray<Entity>;
 
@@ -32,14 +37,27 @@ class Engine {
 	function new(capacity:Int, worldsMaxCount:Int = 1) {
 		_types = new TypeManager();
 		mapToWorld = new CArray(worldsMaxCount);
-		components = new CArray(_types.nextComponentId);
+		components = new CArray(_types.componentsNextTypeId);
 		for(i in 0...components.length) {
+
 			components[i] = new CArray(capacity);
+
+			// TODO: typed component storage
+//			trace(i + "   --");
+//			trace(_types.compalcl[i]);
+//			trace(_types.compal[i]);
+//			var comps = Reflect.callMethod(_types.compalcl[i], _types.compal[i], [capacity]);
+//			trace(Type.getClassName(Type.getClass(comps)));
+//			components[i] = comps;
 		}
 
 		entityManager = new EntityManager(this, capacity);
 		mapToEntity = entityManager.entities;
 		worlds = entityManager.worlds;
+	}
+
+	inline public function edit(entity:Int):Entity {
+		return mapToEntity[entity];
 	}
 
 	public static function initialize(capacity:Int = 0x40000):Engine {
@@ -61,20 +79,20 @@ class Engine {
 		return mapToEntity[entityManager.alloc()];
 	}
 
-	macro static public function typeId<T>(type:ExprOf<Class<T>>):ExprOf<Int> {
-		return macro @:pos(haxe.macro.Context.currentPos())$type._TYPE_ID;
+//	macro static public function typeId<T>(type:ExprOf<Class<T>>):ExprOf<Int> {
+//		return macro @:pos(haxe.macro.Context.currentPos())$type._TYPE_ID;
+//	}
+//
+//	macro public static function specId<T>(type:ExprOf<Class<T>>):ExprOf<Int> {
+//		return macro @:pos(haxe.macro.Context.currentPos())$type._SPEC_ID;
+//	}
+
+	inline public function typeInfo<T>(typeClass:Class<T>):Null<TypeInfo> {
+		return _types.lookup.get(Type.getClassName(typeClass));
 	}
 
-	macro public static function typeIndex<T>(type:ExprOf<Class<T>>):ExprOf<Int> {
-		return macro @:pos(haxe.macro.Context.currentPos())$type._TYPE_INDEX;
-	}
-
-	inline public function typeInfo<T>(type:Class<T>):Null<TypeInfo> {
-		return _types.lookup.get(Type.getClassName(type));
-	}
-
-	macro public function mapTo<T:Component>(self:ExprOf<Engine>, type:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
-		return macro new MapTo(cast $self.components[$type._TYPE_ID]);
+	macro public function mapTo<T:Component>(self:ExprOf<Engine>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
+		return macro new MapTo(cast $self.components[$componentClass.__TYPE.id]);
 	}
 
 	public function toString() {
@@ -104,5 +122,10 @@ class Engine {
 		total += families * (entityCapacity >>> 5);
 
 		return total;
+	}
+
+	@:extern
+	inline public function getComponent<T:Component>(entity:Int, componentType:ComponentType, cls:Class<T>):T {
+		return Cast.unsafe_T(components[componentType.id][entity]);
 	}
 }

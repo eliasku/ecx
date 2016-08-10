@@ -19,7 +19,7 @@ abstract CBitArray(CArray<Int>) {
     }
 
     inline public function disable(index:Int) {
-        this[address(index)] &= ~mask(index);
+        this[address(index)] &= ~(mask(index));
     }
 
     @:arrayAccess
@@ -48,8 +48,9 @@ abstract CBitArray(CArray<Int>) {
         return index >>> 5;
     }
 
-    @:pure
+    // TODO: critical analyzer exception here
+    //@:pure
     inline public static function mask(index:Int):Int {
-        return 1 << (index & 0x1F);
+        return 0x1 << (index & 0x1F);
     }
 }

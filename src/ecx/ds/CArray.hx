@@ -30,6 +30,9 @@ abstract CArray<T>(CArrayData<T>) {
 		this = new flash.Vector<T>(length, true);
 		#elseif js
 		this = untyped __new__(Array, length);
+		for(i in 0...length) this[i] = null;
+//		this = untyped Array.apply(null, __new__(Array, length));
+//		this = untyped __js__("Array.apply(null, new Array({0}))", length);
 		#elseif cpp
 		this = new Array<T>();
 		cpp.NativeArray.setSize(this, length);

@@ -17,11 +17,11 @@ class EntityTest extends EcxTest {
 	}
 
 	public function testEntityCreateDelete() {
-		var e:Entity = world.create();
+		var e:Entity = world.createEntity();
 		Assert.notNull(e);
 		Assert.equals(world, e.world);
 
-		world.delete(e);
+		world.deleteEntity(e);
 		world.invalidate();
 
 		Assert.isNull(e.world);
