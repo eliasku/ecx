@@ -1,6 +1,5 @@
 package ecx;
 
-import ecx.types.TypeKind;
 import ecx.types.ComponentType;
 import ecx.types.ComponentSpec;
 
@@ -22,23 +21,36 @@ import ecx.types.ComponentSpec;
 @:unreflective
 class Component {
 
-	public var entity(default, null):Entity;
-	public var world(get, never):World;
+	public var entity(default, null):Int = -1;
+	public var world(default, null):World;
 
 	@:keep
-	function _internal_setEntity(entity:Entity) {
-		if(entity != null) {
-			this.entity = entity;
-			if(entity.world != null) {
-				onAdded();
-			}
+	function _internal_link(entity:Int, world:World) {
+		#if debug
+		if(world == null) throw "bad world for linking";
+		if(this.entity >= 0) throw "already linked to entity";
+		#end
+
+		this.entity = entity;
+		this.world = world;
+		if(world.isActive(entity)) {
+			onAdded();
 		}
-		else {
-			if(this.entity.world != null) {
-				onRemoved();
-			}
-			this.entity = entity;
+	}
+
+	@:keep
+	function _internal_unlink() {
+		#if debug
+		if(world == null) throw "already not linked to entity";
+		if(entity < 0) throw "linked, but has bad entity";
+		#end
+
+		if(world.isActive(entity)) {
+			onRemoved();
 		}
+		// TODO: Invalid const
+		entity = -1;
+		world = null;
 	}
 
 	function onAdded() {}
@@ -57,11 +69,15 @@ class Component {
 		return null;
 	}
 
-	inline function get_world() {
-		return entity != null ? entity.world : null;
+	inline public function edit():EntityView {
+		#if debug
+		if(world == null) throw "Component is not linked to any entity";
+		if(entity < 0) throw "Bad entity";
+		#end
+		return world.edit(entity);
 	}
 
-	inline function toString():String {
+	inline public function toString():String {
 		return 'Component(Type: #${__getType().id}, Spec: #${__getSpec().id})';
 	}
 }

@@ -6,25 +6,25 @@ import ecx.ds.CBitArray;
 @:final
 @:keep
 @:unreflective
-@:access(ecx.System, ecx.Entity)
+@:access(ecx.System, ecx.EntityView)
 class Family {
 
     public var entities(default, null):Array<Int> = [];
 
-    var _activeBits:CBitArray;
+    var _containedBits:CBitArray;
     var _requiredComponents:CArray<CArray<Component>>;
     var _system:System;
 
     function new(system:System) {
-        var capacity = system.engine.entityManager.capacity;
-        _activeBits = new CBitArray(capacity);
+        var capacity = system.world.capacity;
+        _containedBits = new CBitArray(capacity);
         _system = system;
     }
 
     inline function require(requiredComponentTypes:Array<ComponentType>):Family {
         _requiredComponents = new CArray(requiredComponentTypes != null ? requiredComponentTypes.length : 0);
         for(i in 0..._requiredComponents.length) {
-            _requiredComponents[i] = _system.engine.components[requiredComponentTypes[i].id];
+            _requiredComponents[i] = _system.world.components[requiredComponentTypes[i].id];
         }
         return this;
     }
@@ -42,41 +42,40 @@ class Family {
 
     // TODO: check array of entities
     @:nonVirtual @:unreflective
-    function _internal_entityChanged(entityId:Int, worldMatch:Bool) {
-        var selected = check(entityId);
-        var fits = worldMatch && selected;
-        var isActive = _activeBits.get(entityId);
-        if(fits && !isActive) {
+    function _internal_entityChanged(entity:Int, active:Bool) {
+        var matched = active && check(entity);
+        var contained = _containedBits.get(entity);
+        if(matched && !contained) {
             #if debug
-            if(entities.indexOf(entityId) >= 0) throw "Family flags assets: id duplicated";
+            if(entities.indexOf(entity) >= 0) throw "Family flags assets: id duplicated";
             #end
 
-            _activeBits.enable(entityId);
-            entities.push(entityId);
-            _system.onEntityAdded(entityId, this);
+            _containedBits.enable(entity);
+            entities.push(entity);
+            _system.onEntityAdded(entity, this);
 
             #if debug
-            if(!_activeBits.get(entityId)) throw "Family flags assets: can't enable";
+            if(!_containedBits.get(entity)) throw "Family flags assets: can't enable";
             #end
         }
-        else if(!fits && isActive) {
+        else if(!matched && contained) {
             #if debug
-            if(entities.indexOf(entityId) < 0) throw "Family flags assets: id not found";
+            if(entities.indexOf(entity) < 0) throw "Family flags assets: id not found";
             #end
 
-            _activeBits.disable(entityId);
-            entities.remove(entityId);
-            _system.onEntityRemoved(entityId, this);
+            _containedBits.disable(entity);
+            entities.remove(entity);
+            _system.onEntityRemoved(entity, this);
 
             #if debug
-            if(entities.indexOf(entityId) >= 0) throw "Family flags assets: id duplicated";
-            if(_activeBits.get(entityId)) throw "Family flags assets: can't disable";
+            if(entities.indexOf(entity) >= 0) throw "Family flags assets: id duplicated";
+            if(_containedBits.get(entity)) throw "Family flags assets: can't disable";
             #end
         }
 
         #if debug
-        if(worldMatch == false && entities.indexOf(entityId) >= 0) {
-            throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (fits: $fits, active: $isActive)';
+        if(active == false && entities.indexOf(entity) >= 0) {
+            throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
         }
         #end
     }

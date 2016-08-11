@@ -56,12 +56,12 @@ abstract CArray<T>(CArrayData<T>) {
 	}
 
 	@:arrayAccess
-	inline function get(index:Int):T {
+	inline public function get(index:Int):T {
 		return this[index];
 	}
 
 	@:arrayAccess
-	inline function set(index:Int, element:T):Void {
+	inline public function set(index:Int, element:T):Void {
 		this[index] = element;
 	}
 }

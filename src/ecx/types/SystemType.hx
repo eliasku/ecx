@@ -8,7 +8,7 @@ abstract SystemType(Int) to Int {
     public inline static var INVALID:SystemType = new SystemType(-1);
 
     public var id(get, never):Int;
-    function get_id():Int {
+    inline function get_id():Int {
         return this;
     }
 

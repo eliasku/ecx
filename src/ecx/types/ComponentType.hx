@@ -8,7 +8,7 @@ abstract ComponentType(Int) {
     public inline static var INVALID:ComponentType = new ComponentType(-1);
 
     public var id(get, never):Int;
-    function get_id():Int {
+    inline function get_id():Int {
         return this;
     }
 

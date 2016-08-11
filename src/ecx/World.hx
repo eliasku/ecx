@@ -18,24 +18,32 @@ import haxe.macro.Expr.ExprOf;
 @:final
 @:keep
 @:unreflective
-@:access(ecx.System, ecx.Entity, ecx.Component, ecx.WorldConfig)
+@:access(ecx.System, ecx.EntityView, ecx.Component, ecx.WorldConfig)
 class World {
 
 	public var id(default, null):Int;
+	public var capacity(default, null):Int;
+
+	// (type, entity) => component
+	public var components(default, null):CArray<CArray<Component>>;
+
+	// entity => entity view
+	var _mapToEntityView(default, null):CArray<EntityView>;
+
+	// global ref
+	public var engine(default, null):Engine;
+	public var entityManager(default, null):EntityManager;
 
 	var _systems:Array<System> = [];
 	var _priorities:Array<Int> = [];
-	var _lookup:Array<System> = []; // Map<Int, System>
+	var _lookup:Array<System> = [];
 	var _processors:Array<System> = [];
 
 	var _entities:Array<Int> = [];
 	var _changeList:Array<Int> = [];
 	var _removeList:Array<Int> = [];
 
-	// global ref
-	public var engine(default, null):Engine;
-	var _edb:EntityManager;
-	var _mapToEntity:CArray<Entity>;
+	var _activeFlags:CBitArray;
 	var _changedFlags:CBitArray;
 	var _removedFlags:CBitArray;
 
@@ -45,19 +53,32 @@ class World {
 		return _entities.length;
 	}
 
-	function new(id:Int, engine:Engine, config:WorldConfig) {
+	function new(id:Int, engine:Engine, config:WorldConfig, capacity:Int = 0x40000) {
 		this.id = id;
 		this.engine = engine;
-		_edb = engine.entityManager;
-		_changedFlags = _edb.updateFlags;
-		_removedFlags = _edb.removeFlags;
-		_mapToEntity = _edb.entities;
+		this.capacity = capacity;
+
+		// init component storage
+		components = new CArray(@:privateAccess engine._types.componentsNextTypeId);
+		for(i in 0...components.length) {
+			components[i] = new CArray(capacity);
+		}
+
+		// init entities
+		entityManager = new EntityManager(this, capacity);
+		_mapToEntityView = entityManager.entities;
+		_activeFlags = entityManager.activeFlags;
+		_changedFlags = entityManager.changedFlags;
+		_removedFlags = entityManager.removedFlags;
+
+		// init systems
 		var systems = config._systems;
 		var priorities = config._priorities;
 		var total = systems.length;
 		for(i in 0...total) {
 			register(systems[i], priorities[i]);
 		}
+
 		initialize();
 	}
 
@@ -66,27 +87,29 @@ class World {
 		return macro ecx.ds.Cast.unsafe_T(@:privateAccess $self._lookup[$systemType.id]);
 	}
 
-	inline public function createEntity():Entity {
-		return _mapToEntity[create()];
+	inline public function createEntity(activated:Bool = true):EntityView {
+		return _mapToEntityView[create(activated)];
 	}
 
 	// Recommended
-	public function create():Int {
-		var entity = _edb.alloc();
-		_edb.worlds[entity] = this;
+	public function create(activated:Bool = true):Int {
+		var entity = entityManager.alloc();
+		if(activated) {
+			_activeFlags.enable(entity);
+		}
 		_entities.push(entity);
 		return entity;
 	}
 
-	public function cloneEntity(source:Entity):Entity {
-		return _mapToEntity[clone(source.id)];
+	public function cloneEntity(source:EntityView):EntityView {
+		return _mapToEntityView[clone(source.id)];
 	}
 
 	public function clone(source:Int):Int {
 		var entity = create();
 		// TODO: if we move _add to entity-manager, so we could not use wrapper?
-		var entityEdit:Entity = _mapToEntity[entity];
-		var componentsByType = engine.components;
+		var entityEdit:EntityView = _mapToEntityView[entity];
+		var componentsByType = components;
 		for(componentTypeId in 0...componentsByType.length) {
 			var component:Component = componentsByType[componentTypeId][source];
 			if(component != null) {
@@ -99,7 +122,7 @@ class World {
 	}
 
 	// TODO: EntityEdit::dispose() ?
-	inline public function deleteEntity(instance:Entity) {
+	inline public function deleteEntity(instance:EntityView) {
 		#if debug
 		if(instance == null) throw "Null entity wrapper";
 		#end
@@ -122,7 +145,7 @@ class World {
 		lockFamilies();
 		#end
 
-		_edb.freeFromWorld(this, _removeList, _entities);
+		entityManager.deleteFromWorld(this, _removeList, _entities);
 
 		var updateFlags = _changedFlags;
 		var updateList = _changeList;
@@ -132,9 +155,9 @@ class World {
 			var end = updateList.length;
 			while (i < end) {
 				var eid = updateList[i];
-				var worldMatched = _edb.worlds[eid] == this;
+				var active = _activeFlags.get(eid);
 				for(processor in _processors) {
-					processor._internal_entityChanged(eid, worldMatched);
+					processor._internal_entityChanged(eid, active);
 				}
 				updateFlags.disable(eid);
 				++i;
@@ -158,8 +181,8 @@ class World {
 			}
 			for(family in system._families) {
 				for(entity in family.entities) {
-					if(entity < 0) throw 'FAMILY GUARD: Bad entity $entity';
-					if(_edb.worlds[entity] == null) throw 'FAMILY GUARD: $entity is deleted from world, but in family';
+					if(entity < 0) throw 'FAMILY GUARD: Invalid entity id: $entity';
+					if(isDead(entity)) throw 'FAMILY GUARD: $entity is dead, but in family';
 				}
 			}
 		}
@@ -180,7 +203,7 @@ class World {
 	function unlockFamilies() {
 		for(system in _systems) {
 			if(system._families == null) {
-				// not processor
+				// nothing to process
 				continue;
 			}
 			for(family in system._families) {
@@ -190,21 +213,30 @@ class World {
 	}
 	#end
 
-	public function placeInternal(entity:Entity) {
-		#if debug
-		if(entity.world != null) throw "World is not empty before internal placing";
-		#end
-		var eid = entity.id;
-		engine.worlds[eid] = this;
-		_entities.push(eid);
+	inline public function isDead(entity:Int):Bool {
+		// TODO: bitarray
+		return _entities.indexOf(entity) < 0;
 	}
 
-	public function unplaceInternal(entity:Entity) {
+	public function placeInternal(entity:EntityView) {
 		#if debug
-		if(entity.world != this) throw "World is BAD before internal unplacing";
+		if(entity == null) throw 'null entity wrapper';
+		if(_activeFlags.get(entity.id)) throw 'This entity is already active';
+		if(isDead(entity.id)) throw 'dead Entity';
 		#end
 		var entityId:Int = entity.id;
-		_edb.worlds[entityId] = null;
+		_activeFlags.enable(entityId);
+		_entities.push(entityId);
+	}
+
+	public function unplaceInternal(entity:EntityView) {
+		#if debug
+		if(entity == null) throw 'null entity wrapper';
+		if(!_activeFlags.get(entity.id)) throw "This entity is alread deactivated";
+		if(isDead(entity.id)) throw 'dead Entity';
+		#end
+		var entityId:Int = entity.id;
+		_activeFlags.disable(entityId);
 		for(processor in _processors) {
 			processor._internal_entityChanged(entityId, false);
 		}
@@ -224,7 +256,6 @@ class World {
 
 		for(system in _systems) {
 			system.world = this;
-			system.engine = engine;
 			system._inject();
 			if(system._isProcessor()) {
 				_processors.push(system);
@@ -255,9 +286,9 @@ class World {
 	}
 
 	#if debug
-	function guardEntity(id:Int) {
-		if(engine.mapToEntity[id] == null) throw "Null entity";
-		if(engine.worlds[id] != this) throw "Entity from another world";
+	function guardEntity(entity:Int) {
+		if(_mapToEntityView[entity] == null) throw "Null entity";
+		if(isDead(entity)) throw "Dead entity";
 	}
 	#end
 
@@ -265,7 +296,25 @@ class World {
 		return 'World #$id';
 	}
 
+	// all alive entities
 	inline public function getAllEntities() {
 		return _entities;
+	}
+
+	inline public function edit(entity:Int):EntityView {
+		return _mapToEntityView[entity];
+	}
+
+	@:extern
+	inline public function getComponentFast<T:Component>(entity:Int, componentType:ComponentType, cls:Class<T>):T {
+		return Cast.unsafe_T(components[componentType.id][entity]);
+	}
+
+	macro public function mapTo<T:Component>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
+		return macro new MapTo(cast $self.components[$componentClass.__TYPE.id]);
+	}
+
+	inline public function isActive(entity:Int) {
+		return _activeFlags.get(entity);
 	}
 }

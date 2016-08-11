@@ -36,12 +36,12 @@ class IssuesTest extends EcxTest {
 	}
 
 	public function testComponentsTraversal() {
-		var e:Entity = world.createEntity();
+		var e = world.createEntity();
 		e.create(Value);
 		e.create(TestPosition);
 		var keys = [];
 		var values = [];
-		var components = e.engine.components;
+		var components = world.components;
 		for(key in 0...components.length) {
 			keys.push(key);
 			var value = components[key][e.id];
@@ -60,7 +60,7 @@ class IssuesTest extends EcxTest {
 		expectedEntitiesCount++;
 
 		// entity need to be created once!
-		var e:Entity = null;
+		var e:EntityView = null;
 		Assert.isNull((e != world.createEntity() ? e : e).tryGet(TestPosition));
 		expectedEntitiesCount++;
 

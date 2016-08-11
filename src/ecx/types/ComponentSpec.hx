@@ -7,7 +7,7 @@ abstract ComponentSpec(Int) {
     public inline static var INVALID:ComponentSpec = new ComponentSpec(-1);
 
     public var id(get, never):Int;
-    function get_id():Int {
+    inline function get_id():Int {
         return this;
     }
 

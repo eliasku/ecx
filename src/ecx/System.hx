@@ -26,9 +26,6 @@ class System {
 	public var world(default, null):World;
 
 	@:unreflective
-	public var engine(default, null):Engine;
-
-	@:unreflective
 	var _flags:SystemFlags = new SystemFlags();
 
 	@:unreflective
@@ -51,13 +48,13 @@ class System {
 	}
 
 	@:nonVirtual @:unreflective
-	function _internal_entityChanged(entityId:Int, worldMatched:Bool) {
+	function _internal_entityChanged(entityId:Int, active:Bool) {
 		for(family in _families) {
-			@:privateAccess family._internal_entityChanged(entityId, worldMatched);
+			@:privateAccess family._internal_entityChanged(entityId, active);
 		}
 	}
 
-	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<Array<Entity>> {
+	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<Array<EntityView>> {
 		var componentTypeList = ManagerMacro.componentTypeList(requiredComponents);
 		return macro $self._addFamily(@:privateAccess new ecx.types.Family($self).require($componentTypeList));
 	}

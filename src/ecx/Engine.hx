@@ -4,9 +4,7 @@ import ecx.types.ComponentType;
 import ecx.ds.Cast;
 import ecx.types.TypeInfo;
 import ecx.ds.CArray;
-import ecx.managers.EntityManager;
 import ecx.types.TypeManager;
-import haxe.macro.Context;
 import haxe.macro.Expr;
 
 @:unreflective
@@ -16,67 +14,30 @@ class Engine {
 
 	public static var instance(default, null):Engine;
 
-	// type id => entity id => component obj
-	public var components(default, null):CArray<CArray<Component>>;
-
-	// TODO: typed component storage
-//	public var components(default, null):CArray<Dynamic>;
-
-	// entity id => entity obj
-	public var mapToEntity(default, null):CArray<Entity>;
-
-	// entity id => world
-	public var worlds(default, null):CArray<World>;
 	// world id => world
 	public var mapToWorld(default, null):CArray<World>;
-
 	public var worldsTotal(default, null):Int = 0;
-	public var entityManager(default, null):EntityManager;
+
 	var _types:TypeManager;
 
-	function new(capacity:Int, worldsMaxCount:Int = 1) {
+	function new(worldsMaxCount:Int) {
 		_types = new TypeManager();
 		mapToWorld = new CArray(worldsMaxCount);
-		components = new CArray(_types.componentsNextTypeId);
-		for(i in 0...components.length) {
-
-			components[i] = new CArray(capacity);
-
-			// TODO: typed component storage
-//			trace(i + "   --");
-//			trace(_types.compalcl[i]);
-//			trace(_types.compal[i]);
-//			var comps = Reflect.callMethod(_types.compalcl[i], _types.compal[i], [capacity]);
-//			trace(Type.getClassName(Type.getClass(comps)));
-//			components[i] = comps;
-		}
-
-		entityManager = new EntityManager(this, capacity);
-		mapToEntity = entityManager.entities;
-		worlds = entityManager.worlds;
 	}
 
-	inline public function edit(entity:Int):Entity {
-		return mapToEntity[entity];
-	}
-
-	public static function initialize(capacity:Int = 0x40000):Engine {
+	public static function initialize(worldsMaxCount:Int = 1):Engine {
 		if(instance != null) {
 			throw "Engine already created";
 		}
-		instance = new Engine(capacity);
+		instance = new Engine(worldsMaxCount);
 		return instance;
 	}
 
-	public function createWorld(config:WorldConfig):World {
+	public function createWorld(config:WorldConfig, capacity:Int = 0x40000):World {
 		if(worldsTotal >= mapToWorld.length) throw 'Max world count is ${mapToWorld.length}';
-		return new World(worldsTotal++, this, config);
-	}
-
-	@:nonVirtual @:unreflective
-	public function createPrefab():Entity {
-		// TODO: delete prefabs!!!
-		return mapToEntity[entityManager.alloc()];
+		var world = new World(worldsTotal++, this, config, capacity);
+		mapToWorld[world.id] = world;
+		return world;
 	}
 
 //	macro static public function typeId<T>(type:ExprOf<Class<T>>):ExprOf<Int> {
@@ -89,10 +50,6 @@ class Engine {
 
 	inline public function typeInfo<T>(typeClass:Class<T>):Null<TypeInfo> {
 		return _types.lookup.get(Type.getClassName(typeClass));
-	}
-
-	macro public function mapTo<T:Component>(self:ExprOf<Engine>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
-		return macro new MapTo(cast $self.components[$componentClass.__TYPE.id]);
 	}
 
 	public function toString() {
@@ -122,10 +79,5 @@ class Engine {
 		total += families * (entityCapacity >>> 5);
 
 		return total;
-	}
-
-	@:extern
-	inline public function getComponent<T:Component>(entity:Int, componentType:ComponentType, cls:Class<T>):T {
-		return Cast.unsafe_T(components[componentType.id][entity]);
 	}
 }

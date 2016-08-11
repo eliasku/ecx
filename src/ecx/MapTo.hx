@@ -15,7 +15,9 @@ private typedef MapToData<T> = CArray<T>;
 @:final
 @:unreflective
 @:dce
-abstract MapTo<T:Component>(MapToData<T>) {
+abstract MapTo<T>(MapToData<T>) {
+
+	//TODO: add ':Component' (after IDEA will be fixed)
 
 	@:generic inline public function new<T:Component>(arr:MapToData<T>) {
 		this = arr;

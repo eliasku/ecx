@@ -1,5 +1,7 @@
 package ecx.ds;
 
+// TODO: should use platform optimized CInt32Array (js - Int32Array, flash - Vector.<int>, etc)
+
 @:final
 @:unreflective
 @:dce

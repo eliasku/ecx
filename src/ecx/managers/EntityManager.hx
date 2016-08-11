@@ -6,13 +6,13 @@ import ecx.ds.CArray;
 
 @:unreflective
 @:final
-@:access(ecx.Entity, ecx.World)
+@:access(ecx.EntityView, ecx.World)
 class EntityManager {
 
-    public var entities(default, null):CArray<Entity>;
-    public var worlds(default, null):CArray<World>;
-    public var removeFlags(default, null):CBitArray;
-    public var updateFlags(default, null):CBitArray;
+    public var entities(default, null):CArray<EntityView>;
+    public var activeFlags(default, null):CBitArray;
+    public var removedFlags(default, null):CBitArray;
+    public var changedFlags(default, null):CBitArray;
 
     var _pool:CRingBuffer_Int;
 
@@ -20,20 +20,19 @@ class EntityManager {
     public var capacity(default, null):Int;
     public var available(get, never):Int;
 
-    public function new(engine:Engine, capacity:Int) {
+    public function new(world:World, capacity:Int) {
         this.capacity = capacity;
 
         _pool = new CRingBuffer_Int(capacity);
-        removeFlags = new CBitArray(capacity);
-        updateFlags = new CBitArray(capacity);
+        activeFlags = new CBitArray(capacity);
+        removedFlags = new CBitArray(capacity);
+        changedFlags = new CBitArray(capacity);
 
-        var map = new CArray<Entity>(capacity);
-        var worlds = new CArray<World>(capacity);
+        var map = new CArray<EntityView>(capacity);
         for(id in 0...map.length) {
-            map[id] = new Entity(id, engine);
+            map[id] = new EntityView(id, world);
         }
         this.entities = map;
-        this.worlds = worlds;
     }
 
     public function alloc():Int {
@@ -47,19 +46,10 @@ class EntityManager {
         return eid;
     }
 
-    public function freePrefab(id:Int) {
-        #if debug
-        if(id < 0 || id >= capacity) throw "Bad entity id";
-        if(worlds[id] != null) throw "Entity is not a prefab";
-        #end
-        _pool.push(id);
-        --used;
-    }
-
-    public function freeFromWorld(world:World, list:Array<Int>, container:Array<Int>) {
+    public function deleteFromWorld(world:World, list:Array<Int>, container:Array<Int>) {
         var locPool:CRingBuffer_Int = _pool;
-        var locRemoveFlags = removeFlags;
-        var locWorlds:CArray<World> = worlds;
+        var locRemoveFlags = removedFlags;
+        var locActiveFlags = activeFlags;
         var locMap = entities;
         var eid:Int;
         var removedCount:Int = 0;
@@ -68,14 +58,13 @@ class EntityManager {
             var i = 0;
             while(i < count) {
                 var eid = list[i];
-                var entity:Entity = locMap[eid];
-                #if debug
-                if(world != locWorlds[eid]) throw "Bad world on freeFromWorld";
-                #end
+                var entity = locMap.get(eid);
                 entity._clear();
-                // TODO: we 100% sure to delete it from families :)
-                world._internal_entityChanged(eid);
-                locWorlds[eid] = null;
+                if(locActiveFlags.get(eid)) {
+                    // TODO: we 100% sure to delete it from families :)
+                    world._internal_entityChanged(eid);
+                    locActiveFlags.disable(eid);
+                }
                 locRemoveFlags.disable(eid);
 
                 container.splice(container.lastIndexOf(eid), 1);

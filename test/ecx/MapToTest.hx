@@ -11,7 +11,7 @@ class MapToTest extends EcxTest {
     }
 
     public function testMapTo() {
-        var values:MapTo<Value> = world.engine.mapTo(Value);
+        var values:MapTo<Value> = world.mapTo(Value);
         var e = world.createEntity();
         var v = e.create(Value);
         Assert.isTrue(v == values[e.id]);
