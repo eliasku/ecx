@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.ds.Cast;
 import ecx.types.ComponentType;
 import ecx.macro.ManagerMacro;
 import haxe.macro.Expr.ExprOf;
@@ -20,7 +21,7 @@ class EntityView {
 	}
 
 	@:extern inline function __getComponentByType<T:Component>(componentType:ComponentType, componentClass:Class<T>):T {
-		return world.getComponentFast(id, componentType, componentClass);
+		return Cast.unsafe(world.components[componentType.id][id], componentClass);
 	}
 
 	macro public function get<T:Component>(self:ExprOf<EntityView>, componentClass:ExprOf<Class<T>>):ExprOf<T> {

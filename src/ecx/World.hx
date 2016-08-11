@@ -21,14 +21,14 @@ import haxe.macro.Expr.ExprOf;
 @:access(ecx.System, ecx.EntityView, ecx.Component, ecx.WorldConfig)
 class World {
 
-	public var id(default, null):Int;
-	public var capacity(default, null):Int;
-
-	// (type, entity) => component
+	// Mapping: (type, entity) => component
 	public var components(default, null):CArray<CArray<Component>>;
 
-	// entity => entity view
-	var _mapToEntityView(default, null):CArray<EntityView>;
+	// Identifier of this world
+	public var id(default, null):Int;
+
+	// Maximum amount of entities
+	public var capacity(default, null):Int;
 
 	// global ref
 	public var engine(default, null):Engine;
@@ -39,10 +39,15 @@ class World {
 	var _lookup:Array<System> = [];
 	var _processors:Array<System> = [];
 
+	// alive entities
 	var _entities:Array<Int> = [];
 	var _changeList:Array<Int> = [];
 	var _removeList:Array<Int> = [];
 
+	// entity => entity view
+	var _views(default, null):CArray<EntityView>;
+
+	// Flags
 	var _activeFlags:CBitArray;
 	var _changedFlags:CBitArray;
 	var _removedFlags:CBitArray;
@@ -66,7 +71,7 @@ class World {
 
 		// init entities
 		entityManager = new EntityManager(this, capacity);
-		_mapToEntityView = entityManager.entities;
+		_views = entityManager.entities;
 		_activeFlags = entityManager.activeFlags;
 		_changedFlags = entityManager.changedFlags;
 		_removedFlags = entityManager.removedFlags;
@@ -84,11 +89,11 @@ class World {
 
 	macro public function get<T:System>(self:ExprOf<World>, systemClass:ExprOf<Class<T>>):ExprOf<T> {
 		var systemType = ManagerMacro.systemType(systemClass);
-		return macro ecx.ds.Cast.unsafe_T(@:privateAccess $self._lookup[$systemType.id]);
+		return macro ecx.ds.Cast.unsafe(@:privateAccess $self._lookup[$systemType.id], $systemClass);
 	}
 
 	inline public function createEntity(activated:Bool = true):EntityView {
-		return _mapToEntityView[create(activated)];
+		return _views[create(activated)];
 	}
 
 	// Recommended
@@ -102,13 +107,13 @@ class World {
 	}
 
 	public function cloneEntity(source:EntityView):EntityView {
-		return _mapToEntityView[clone(source.id)];
+		return _views[clone(source.id)];
 	}
 
 	public function clone(source:Int):Int {
 		var entity = create();
 		// TODO: if we move _add to entity-manager, so we could not use wrapper?
-		var entityEdit:EntityView = _mapToEntityView[entity];
+		var entityEdit:EntityView = _views[entity];
 		var componentsByType = components;
 		for(componentTypeId in 0...componentsByType.length) {
 			var component:Component = componentsByType[componentTypeId][source];
@@ -287,7 +292,7 @@ class World {
 
 	#if debug
 	function guardEntity(entity:Int) {
-		if(_mapToEntityView[entity] == null) throw "Null entity";
+		if(_views[entity] == null) throw "Null entity";
 		if(isDead(entity)) throw "Dead entity";
 	}
 	#end
@@ -302,12 +307,12 @@ class World {
 	}
 
 	inline public function edit(entity:Int):EntityView {
-		return _mapToEntityView[entity];
+		return _views[entity];
 	}
 
 	@:extern
-	inline public function getComponentFast<T:Component>(entity:Int, componentType:ComponentType, cls:Class<T>):T {
-		return Cast.unsafe_T(components[componentType.id][entity]);
+	inline public function getComponentFast<T:Component>(entity:Int, componentType:ComponentType, componentClass:Class<T>):T {
+		return Cast.unsafe(components[componentType.id][entity], componentClass);
 	}
 
 	macro public function mapTo<T:Component>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
