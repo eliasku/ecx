@@ -17,14 +17,30 @@ class EntityTest extends EcxTest {
 	}
 
 	public function testEntityCreateDelete() {
-		var e = world.createEntity();
-		Assert.notNull(e);
-		Assert.equals(world, e.world);
-		Assert.isFalse(world.isDead(e.id));
+		var e = world.edit(world.create());
+		var inactiveEntity = world.edit(world.createPassive());
 
-		world.deleteEntity(e);
+		Assert.notNull(e);
+		Assert.notNull(inactiveEntity);
+
+		Assert.equals(world, e.world);
+		Assert.equals(world, inactiveEntity.world);
+
+		Assert.isTrue(e.alive);
+		Assert.isTrue(inactiveEntity.alive);
+
+		Assert.isTrue(e.active);
+		Assert.isFalse(inactiveEntity.active);
+
+		e.delete();
+		inactiveEntity.delete();
+
 		world.invalidate();
 
-		Assert.isTrue(world.isDead(e.id));
+		Assert.isFalse(e.active);
+		Assert.isFalse(e.alive);
+
+		Assert.isFalse(inactiveEntity.active);
+		Assert.isFalse(inactiveEntity.alive);
 	}
 }

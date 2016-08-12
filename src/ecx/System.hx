@@ -1,11 +1,12 @@
 package ecx;
 
-import ecx.types.Family;
+import ecx.types.FamilyData;
 import ecx.types.SystemFlags;
 import ecx.types.SystemSpec;
 import ecx.types.SystemType;
-import ecx.macro.ManagerMacro;
 import haxe.macro.Expr;
+
+using ecx.macro.ClassMacroTools;
 
 /**
  Initialization:
@@ -16,10 +17,10 @@ import haxe.macro.Expr;
 **/
 
 #if !macro
-@:autoBuild(ecx.macro.WorldTypeBuilder.build(1))
+@:autoBuild(ecx.macro.TypeBuilder.build(1))
 #end
 @:base
-@:access(ecx.Family)
+@:access(ecx.FamilyData)
 class System {
 
 	@:unreflective
@@ -29,13 +30,13 @@ class System {
 	var _flags:SystemFlags = new SystemFlags();
 
 	@:unreflective
-	var _families:Array<Family>;
+	var _families:Array<FamilyData>;
 
 	function initialize() {}
 	function update() {}
 
-	function onEntityAdded(entityId:Int, family:Family) {}
-	function onEntityRemoved(entityId:Int, family:Family) {}
+	function onEntityAdded(entity:Entity, family:FamilyData) {}
+	function onEntityRemoved(entity:Entity, family:FamilyData) {}
 
 	function _inject() {}
 
@@ -48,19 +49,19 @@ class System {
 	}
 
 	@:nonVirtual @:unreflective
-	function _internal_entityChanged(entityId:Int, active:Bool) {
+	function _internal_entityChanged(entity:Entity, enabled:Bool) {
 		for(family in _families) {
-			@:privateAccess family._internal_entityChanged(entityId, active);
+			@:privateAccess family._internal_entityChanged(entity, enabled);
 		}
 	}
 
-	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<Array<EntityView>> {
-		var componentTypeList = ManagerMacro.componentTypeList(requiredComponents);
-		return macro $self._addFamily(@:privateAccess new ecx.types.Family($self).require($componentTypeList));
+	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<Array<Entity>> {
+		var componentTypeList = requiredComponents.componentTypeList();
+		return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypeList));
 	}
 
 	@:nonVirtual @:unreflective
-	function _addFamily(family:Family):Array<Int> {
+	function _addFamily(family:FamilyData):Array<Entity> {
 		if(_families == null) {
 			_families = [];
 			_flags = _flags.add(SystemFlags.PROCESSOR);

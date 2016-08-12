@@ -1,8 +1,16 @@
 package ecx;
 
+import ecx.components.TestPosition;
+import ecx.components.Value;
+
 class EmptySystem extends System {
 
-	public function new() {
+	var _entities:Family<Value, TestPosition>;
 
+	public function new() {}
+
+	override function update() {
+		for(entity in _entities) {
+		}
 	}
 }

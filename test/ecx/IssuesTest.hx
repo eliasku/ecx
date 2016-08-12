@@ -12,31 +12,32 @@ class IssuesTest extends EcxTest {
 	}
 
 	public function testAccess() {
-		var e = world.createEntity();
-		e.create(Value);
-		Assert.notNull(e.get(Value));
-		Assert.equals(0, e.get(Value).value);
-		e.get(Value).value = 1;
-		Assert.equals(1, e.get(Value).value);
+		var entity = world.create();
+		var data = world.edit(entity);
+		data.create(Value);
+		Assert.notNull(data.get(Value));
+		Assert.equals(0, data.get(Value).value);
+		data.get(Value).value = 1;
+		Assert.equals(1, data.get(Value).value);
 		//trace("1: " + Database.typeId(TestPosition));
 //		trace("2: " + e.database.components[Database.typeId(TestPosition)]);
 //		trace("3: " + e.database.components[Database.typeId(TestPosition)].length);
 //		trace("TEST POSITION: " + e.id + " - " + e.get(TestPosition));
-		Assert.isNull(e.get(TestPosition));
+		Assert.isNull(data.get(TestPosition));
 	}
 
 	public function testClone() {
-		var e1 = world.createEntity();
+		var e1 = world.edit(world.create());
 		e1.create(Value);
-		var e2 = world.createEntity();
-		var e3 = world.cloneEntity(e1);
-		var e4 = world.cloneEntity(e2);
+		var e2 = world.edit(world.create());
+		var e3 = world.edit(world.clone(e1.entity));
+		var e4 = world.edit(world.clone(e2.entity));
 		Assert.isTrue(e3.has(Value));
 		Assert.isFalse(e4.has(Value));
 	}
 
 	public function testComponentsTraversal() {
-		var e = world.createEntity();
+		var e = world.edit(world.create());
 		e.create(Value);
 		e.create(TestPosition);
 		var keys = [];
@@ -53,17 +54,17 @@ class IssuesTest extends EcxTest {
 	}
 
 	public function testGetMacro() {
-		var expectedEntitiesCount:Int = world.entitiesTotal;
+		var expectedEntitiesCount:Int = world.entityManager.used;
 
 		// entity need to be created once!
-		Assert.isNull(world.createEntity().get(TestPosition));
+		Assert.isNull(world.edit(world.create()).get(TestPosition));
 		expectedEntitiesCount++;
 
 		// entity need to be created once!
 		var e:EntityView = null;
-		Assert.isNull((e != world.createEntity() ? e : e).tryGet(TestPosition));
+		Assert.isNull((e != world.edit(world.create()) ? e : null).tryGet(TestPosition));
 		expectedEntitiesCount++;
 
-		Assert.equals(expectedEntitiesCount, world.entitiesTotal);
+		Assert.equals(expectedEntitiesCount, world.entityManager.used);
 	}
 }

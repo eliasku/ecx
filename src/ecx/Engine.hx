@@ -1,11 +1,8 @@
 package ecx;
 
-import ecx.types.ComponentType;
-import ecx.ds.Cast;
 import ecx.types.TypeInfo;
 import ecx.ds.CArray;
 import ecx.types.TypeManager;
-import haxe.macro.Expr;
 
 @:unreflective
 @:final
@@ -57,27 +54,28 @@ class Engine {
 	}
 
 
-	public static function calculateMemoryUsage(entityCapacity:Int, componentsCount:Int, families:Int) {
-		var total = 0;
-
-		// components storage
-		total += componentsCount * 4 + (entityCapacity + 1) * 4;
-
-		// entity pool
-		total += entityCapacity * 4;
-
-		// entity worlds map
-		total += (entityCapacity + 1) * 4;
-
-		// entity flags map
-		total += (entityCapacity + 1) * 4;
-
-		// entity id-wrapper map
-		total += (entityCapacity + 1) * 4;
-
-		// families active map storage
-		total += families * (entityCapacity >>> 5);
-
-		return total;
-	}
+// TODO: mem usage calculator
+//	public static function calculateMemoryUsage(entityCapacity:Int, componentsCount:Int, families:Int) {
+//		var total = 0;
+//
+//		// components storage
+//		total += componentsCount * 4 + (entityCapacity + 1) * 4;
+//
+//		// entity pool
+//		total += entityCapacity * 4;
+//
+//		// entity worlds map
+//		total += (entityCapacity + 1) * 4;
+//
+//		// entity flags map
+//		total += (entityCapacity + 1) * 4;
+//
+//		// entity id-wrapper map
+//		total += (entityCapacity + 1) * 4;
+//
+//		// families active map storage
+//		total += families * (entityCapacity >>> 5);
+//
+//		return total;
+//	}
 }

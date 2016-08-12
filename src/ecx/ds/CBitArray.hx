@@ -34,6 +34,10 @@ abstract CBitArray(CArray<Int>) {
         value ? enable(index) : disable(index);
     }
 
+    inline public function isFalse(index:Int):Bool {
+        return (this[address(index)] & mask(index)) == 0;
+    }
+
     inline public function enableIfNot(index:Int):Bool {
         var a = address(index);
         var m = mask(index);

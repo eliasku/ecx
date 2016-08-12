@@ -1,15 +1,17 @@
 package ecx.managers;
 
+import ecx.types.EntityData;
 import ecx.ds.CRingBuffer_Int;
 import ecx.ds.CBitArray;
 import ecx.ds.CArray;
 
 @:unreflective
 @:final
-@:access(ecx.EntityView, ecx.World)
+@:access(ecx.Entity, ecx.types.EntityData, ecx.World)
 class EntityManager {
 
-    public var entities(default, null):CArray<EntityView>;
+    public var mapToData(default, null):CArray<EntityData>;
+    public var aliveMask(default, null):CBitArray;
     public var activeFlags(default, null):CBitArray;
     public var removedFlags(default, null):CBitArray;
     public var changedFlags(default, null):CBitArray;
@@ -24,56 +26,50 @@ class EntityManager {
         this.capacity = capacity;
 
         _pool = new CRingBuffer_Int(capacity);
+        aliveMask = new CBitArray(capacity);
         activeFlags = new CBitArray(capacity);
         removedFlags = new CBitArray(capacity);
         changedFlags = new CBitArray(capacity);
 
-        var map = new CArray<EntityView>(capacity);
+        var map = new CArray<EntityData>(capacity);
         for(id in 0...map.length) {
-            map[id] = new EntityView(id, world);
+            map[id] = new EntityData(new Entity(id), world);
         }
-        this.entities = map;
+        this.mapToData = map;
     }
 
-    public function alloc():Int {
+    public function alloc():Entity {
         #if debug
         if(used >= capacity) throw 'Out of entities, max allowed $capacity';
         #end
 
-        var eid:Int = _pool.pop();
         ++used;
-
-        return eid;
+        return new Entity(_pool.pop());
     }
 
-    public function deleteFromWorld(world:World, list:Array<Int>, container:Array<Int>) {
+    public function deleteFromWorld(world:World, list:Array<Entity>) {
         var locPool:CRingBuffer_Int = _pool;
-        var locRemoveFlags = removedFlags;
+        var locRemovedFlags = removedFlags;
         var locActiveFlags = activeFlags;
-        var locMap = entities;
-        var eid:Int;
-        var removedCount:Int = 0;
+        var locAliveMask = aliveMask;
+        var locMapToData = mapToData;
         while(list.length > 0) {
             var count = list.length;
             var i = 0;
             while(i < count) {
-                var eid = list[i];
-                var entity = locMap.get(eid);
-                entity._clear();
-                if(locActiveFlags.get(eid)) {
-                    // TODO: we 100% sure to delete it from families :)
-                    world._internal_entityChanged(eid);
-                    locActiveFlags.disable(eid);
-                }
-                locRemoveFlags.disable(eid);
-
-                container.splice(container.lastIndexOf(eid), 1);
-                locPool.push(eid);
+                var entity = list[i];
+                world.clearComponents(entity);
+                locActiveFlags.disable(entity.id);
+                locAliveMask.disable(entity.id);
+                locRemovedFlags.disable(entity.id);
+                locPool.push(entity.id);
                 ++i;
             }
 
             used -= count;
+            #if debug
             if(used < 0) throw "No way!";
+            #end
 
             //if(startLength != removeList.length) throw "removing while removing";
             list.splice(0, count);

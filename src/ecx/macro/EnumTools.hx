@@ -1,5 +1,12 @@
 package ecx.macro;
 
+#if macro
+
+/**
+	Thanks to @nadako
+	- https://gist.github.com/nadako/3db9c067a4e93d64d1f4
+**/
+@:final
 class EnumTools {
 	public static macro function extract(value:haxe.macro.Expr.ExprOf<EnumValue>, pattern:haxe.macro.Expr) {
 		return switch (pattern) {
@@ -14,3 +21,5 @@ class EnumTools {
 		}
 	}
 }
+
+#end

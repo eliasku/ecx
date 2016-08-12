@@ -15,43 +15,14 @@ import ecx.types.ComponentSpec;
 **/
 
 #if !macro
-@:autoBuild(ecx.macro.WorldTypeBuilder.build(0))
+@:autoBuild(ecx.macro.TypeBuilder.build(0))
 #end
 @:base
 @:unreflective
 class Component {
 
-	public var entity(default, null):Int = -1;
+	public var entity(default, null):Entity = Entity.INVALID;
 	public var world(default, null):World;
-
-	@:keep
-	function _internal_link(entity:Int, world:World) {
-		#if debug
-		if(world == null) throw "bad world for linking";
-		if(this.entity >= 0) throw "already linked to entity";
-		#end
-
-		this.entity = entity;
-		this.world = world;
-		if(world.isActive(entity)) {
-			onAdded();
-		}
-	}
-
-	@:keep
-	function _internal_unlink() {
-		#if debug
-		if(world == null) throw "already not linked to entity";
-		if(entity < 0) throw "linked, but has bad entity";
-		#end
-
-		if(world.isActive(entity)) {
-			onRemoved();
-		}
-		// TODO: Invalid const
-		entity = -1;
-		world = null;
-	}
 
 	function onAdded() {}
 	function onRemoved() {}
@@ -72,12 +43,18 @@ class Component {
 	inline public function edit():EntityView {
 		#if debug
 		if(world == null) throw "Component is not linked to any entity";
-		if(entity < 0) throw "Bad entity";
+		if(!entity.isValid) throw "Bad entity";
 		#end
 		return world.edit(entity);
 	}
 
 	inline public function toString():String {
 		return 'Component(Type: #${__getType().id}, Spec: #${__getSpec().id})';
+	}
+
+	/** Component is linked to entity **/
+	public var isActive(get, never):Bool;
+	inline function get_isActive():Bool {
+		return entity.isValid;
 	}
 }

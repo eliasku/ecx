@@ -24,11 +24,11 @@ abstract MapTo<T>(MapToData<T>) {
 	}
 
 	@:arrayAccess
-	inline public function get(entity:Int):T {
+	inline public function get(entity:Entity):T {
 		#if (flash||cs||java)
-		return cast this[entity];
+		return cast this[entity.id];
 		#else
-		return this[entity];
+		return this[entity.id];
 		#end
 	}
 }
