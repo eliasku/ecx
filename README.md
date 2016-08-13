@@ -15,9 +15,9 @@ ECX is Entity Component System framework for Haxe
 
 ### System Flags
 
-`IDLE`: `System` doest not override `update` method.
-`CONFIG`: `System` has `@:config` class-meta. This system is just configurator. It will be deleted after World initialization phase.
-`PROCESSOR`: `System` has at least one entity Family to process.
+* `IDLE`: System doesn't override `update` method. Should not be updated.
+* `CONFIG`: System is defined with `@:config` meta. This system is just configurator. It will be deleted after World initialization phase.
+* `PROCESSOR`: System has at least one entity Family to process.
 
 ### Injection
 
@@ -56,7 +56,8 @@ EntityView is the utility class. It provides shortcut to edit entity using objec
 
 
 # TODO
-* Array<Int> -> target-optimized `EntityVector`
+* List of entities should be target-optimized `EntityVector`
 * CBitArray target-optimized underlying data
-* readme
-* more tests
+* Examples
+* Unit tests
+* README
