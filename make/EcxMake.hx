@@ -18,20 +18,20 @@ class EcxMake extends hxmake.Module {
 		apply(IdeaPlugin);
 
 		library(function(ext:HaxelibExt) {
-			ext.config.version = "0.0.1";
+			ext.config.version = "0.0.2";
 			ext.config.description = "ECX entity-component-system framework";
 			ext.config.url = "https://github.com/eliasku/ecx";
 			ext.config.tags = ["entity", "component", "system", "ecs", "ces", "cross"];
 			ext.config.contributors = ["eliasku"];
 			ext.config.license = "MIT";
-			ext.config.releasenote = "Initial release";
+			ext.config.releasenote = "Rethinking API and refactoring";
 
 			ext.pack.includes = ["src", "haxelib.json", "README.md"];
 		});
 
 		var tt = new TestTask();
 		tt.debug = true;
-		tt.targets = ["neko", "flash", "js", "cpp", "java", "cs"];
+		tt.targets = ["neko", "swf", "node", "js", "cpp", "java", "cs"];
 		tt.libraries = ["ecx"];
 		task("test", tt);
 	}
