@@ -22,9 +22,9 @@ env:
     - TARGET=cpp
     - TARGET=cs,java
 
-#matrix:
-#  allow_failures:
-#    - haxe: development
+matrix:
+  allow_failures:
+    - haxe: development
 
 install:
   - haxelib dev ecx .
