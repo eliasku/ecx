@@ -48,6 +48,7 @@ class TypeBuilder {
 		TypeMacroDebug.print(typeInfo);
 
 		var fields:Array<Field> = Context.getBuildFields();
+		// TODO: specId
 		var fieldsExpr = macro {
 			var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
 			var public_Xstatic_Xinline_X_SPEC_ID = $specId;
@@ -92,6 +93,7 @@ class TypeBuilder {
 			addConfigurator(cls, fields, injExprs);
 			addInjectors(fields, injExprs);
 			fields = makeInjectMethod(fields, injExprs);
+			patchUnreflective(fields);
 		}
 
 		TypeMacroDebug.end();
@@ -214,6 +216,21 @@ class TypeBuilder {
 			}
 		}
 		return null;
+	}
+
+	static function patchUnreflective(fields:Array<Field>) {
+		for(field in fields) {
+			switch(field.name) {
+				case "update":// | "initialize" | "onEntityAdded" | "onEntityRemoved":
+					if(field.meta == null) {
+						field.meta = [];
+					}
+					field.meta.push({
+						name: ":unreflective",
+						pos: field.pos
+					});
+			}
+		}
 	}
 
 	static function makeInjectMethod(fields:Array<Field>, exprs:Array<Expr>):Array<Field> {

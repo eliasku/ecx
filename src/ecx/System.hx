@@ -32,18 +32,26 @@ class System {
 	@:unreflective
 	var _families:Array<FamilyData>;
 
+	//@:unreflective
 	function initialize() {}
+
+	@:unreflective
 	function update() {}
 
+	//@:unreflective
 	function onEntityAdded(entity:Entity, family:FamilyData) {}
+
+	//@:unreflective
 	function onEntityRemoved(entity:Entity, family:FamilyData) {}
 
 	function _inject() {}
 
+	//@:unreflective
 	function __getType():SystemType {
 		return SystemType.INVALID;
 	}
 
+	//@:unreflective
 	function __getSpec():SystemSpec {
 		return SystemSpec.INVALID;
 	}

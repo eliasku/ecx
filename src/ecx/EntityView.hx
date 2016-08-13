@@ -6,6 +6,7 @@ import ecx.types.ComponentType;
 import ecx.macro.ClassMacroTools;
 import haxe.macro.Expr.ExprOf;
 
+@:dce
 @:final
 @:keep
 @:unreflective
@@ -57,15 +58,15 @@ abstract EntityView(EntityData) {
 		world.addComponent(entity, component, component.__getType());
 	}
 
-	public function delete() {
+	inline public function delete() {
 		world.delete(entity);
 	}
 
-	public function clear() {
+	inline public function clear() {
 		world.clearComponents(entity);
 	}
 
-	function toString():String {
+	inline function toString():String {
 		return 'Entity #$id';
 	}
 

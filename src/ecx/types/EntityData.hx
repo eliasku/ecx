@@ -1,7 +1,6 @@
 package ecx.types;
 
 @:final
-@:keep
 @:unreflective
 class EntityData {
 
@@ -12,7 +11,6 @@ class EntityData {
         this.entity = entity;
         this.world = world;
     }
-
 
     public var view(get, never):EntityView;
     inline function get_view():EntityView {

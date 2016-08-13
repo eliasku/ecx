@@ -33,12 +33,9 @@ class TypeMacroCache {
         return baseTypeData.typeId;
     }
 
-
     public static function set(data:TypeMacroData) {
         getTypeMap(data.kind).set(data.path, data);
     }
-
-// TODO: final
 }
 
 #end

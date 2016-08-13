@@ -20,7 +20,7 @@ class WorldConstructor {
 
 	static function createComponentsData(world:World) {
 		var capacity = world.capacity;
-		var typesCount = world.engine._types.componentsNextTypeId;
+		var typesCount = world.engine.getComponentTypesCount();
 
 		var components:CArray<CArray<Component>> = new CArray(typesCount);
 		for(i in 0...components.length) {
@@ -105,5 +105,30 @@ class WorldConstructor {
 			}
 			--i;
 		}
+	}
+
+// TODO: mem usage calculator
+	public static function calculateMemoryUsage(capacity:Int, components:Int, families:Int) {
+		var total = 0;
+		var ptrSize = 4;
+		var idSize = 4;
+		var bitArraySize = 4 * Math.ceil(capacity / 32);
+
+		// 4 flag bit arrays
+		total += (4 + families) * bitArraySize;
+
+		// component storage
+		total += ptrSize * components;
+
+		// per component
+		total += (capacity * ptrSize) * components;
+
+		// entity ring buffer
+		total += capacity * 4;
+
+		// entity data map
+		total += (ptrSize + ptrSize + idSize) * capacity;
+
+		return total;
 	}
 }
