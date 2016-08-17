@@ -1,8 +1,8 @@
 package ecx;
 
-#if display
+#if idea
 
-typedef Family<T:Component> = Array<Entity>;
+typedef Family<Rest> = Array<Entity>;
 
 #else
 

@@ -21,7 +21,7 @@ private typedef CArrayData<T> = Array<T>;
 @:final
 @:unreflective
 @:dce
-abstract CArray<T>(CArrayData<T>) {
+abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 
 	public var length(get, never):Int;
 
@@ -63,5 +63,18 @@ abstract CArray<T>(CArrayData<T>) {
 	@:arrayAccess
 	inline public function set(index:Int, element:T):Void {
 		this[index] = element;
+	}
+
+	inline public function iterator():CArrayIterator<T> {
+		return new CArrayIterator<T>(this);
+	}
+
+	@:generic
+	inline public static function fromArray<T>(array:Array<T>):CArray<T> {
+		var result = new CArray<T>(array.length);
+		for(i in 0...array.length) {
+			result[i] = array[i];
+		}
+		return result;
 	}
 }

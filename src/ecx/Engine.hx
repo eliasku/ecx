@@ -11,29 +11,27 @@ class Engine {
 
 	public static var instance(default, null):Engine;
 
-	public var worldsTotal(default, null):Int = 0;
+	public var worldsTotal(get, never):Int;
 
 	// world id => world
-	var _worlds:CArray<World>;
+	var _worlds:Array<World> = [];
 
 	var _types:TypeManager;
 
-	function new(worldsMaxCount:Int) {
+	function new() {
 		_types = new TypeManager();
-		_worlds = new CArray(worldsMaxCount);
 	}
 
-	public static function initialize(worldsMaxCount:Int = 1):Engine {
+	public static function initialize():Engine {
 		if(instance != null) {
 			throw "Engine already created";
 		}
-		instance = new Engine(worldsMaxCount);
+		instance = new Engine();
 		return instance;
 	}
 
 	public function createWorld(config:WorldConfig, capacity:Int = 0x40000):World {
-		if(worldsTotal >= _worlds.length) throw 'Max world count is ${_worlds.length}';
-		var world = new World(worldsTotal++, this, config, capacity);
+		var world = new World(_worlds.length, this, config, capacity);
 		_worlds[world.id] = world;
 		return world;
 	}
@@ -52,5 +50,9 @@ class Engine {
 
 	public function toString() {
 		return "Engine";
+	}
+
+	inline function get_worldsTotal() {
+		return _worlds.length;
 	}
 }

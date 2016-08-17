@@ -153,7 +153,7 @@ class TypeBuilder {
 		if(injectFields.length > 0) {
 			for(i in 0...injectFields.length) {
 				var expr = macro {
-					$i{injectFields[i].name} = __world.get($i{injectType[i]});
+					$i{injectFields[i].name} = __world.resolve($i{injectType[i]});
 				};
 				exprs.push(expr);
 			}

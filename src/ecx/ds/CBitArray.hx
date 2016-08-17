@@ -1,14 +1,12 @@
 package ecx.ds;
 
-// TODO: should use platform optimized CInt32Array (js - Int32Array, flash - Vector.<int>, etc)
-
 @:final
 @:unreflective
 @:dce
-abstract CBitArray(CArray<Int>) {
+abstract CBitArray(CInt32Array) {
 
     inline public function new(count:Int) {
-        this = new CArray<Int>(Math.ceil(count / 32));
+        this = new CInt32Array(Math.ceil(count / 32));
         #if neko
         for(i in 0...this.length) {
             this[i] = 0;
@@ -21,7 +19,7 @@ abstract CBitArray(CArray<Int>) {
     }
 
     inline public function disable(index:Int) {
-        this[address(index)] &= ~(mask(index));
+        this[address(index)] &= ~mask(index);
     }
 
     @:arrayAccess
@@ -49,7 +47,7 @@ abstract CBitArray(CArray<Int>) {
         return false;
     }
 
-    @:pure
+    //@:pure
     inline public static function address(index:Int):Int {
         return index >>> 5;
     }

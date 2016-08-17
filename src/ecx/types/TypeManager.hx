@@ -19,6 +19,10 @@ class TypeManager {
     public function new() {
         var typesMeta = haxe.rtti.Meta.getType(TypeManager);
         var typesData:Array<Dynamic> = Reflect.field(typesMeta, "types_data");
+        if(typesData == null) {
+          typesData = [];
+        }
+
         var i = 0;
         var maxComponentTypeId = 0;
         while(i < typesData.length) {

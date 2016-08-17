@@ -1,5 +1,8 @@
 package ecx;
 
+import ecx.ds.CArrayIterator;
+import ecx.types.WorldEntitiesIterator;
+import ecx.ds.CInt32RingBuffer;
 import ecx.managers.WorldConstructor;
 import ecx.types.FamilyData;
 import ecx.types.EntityData;
@@ -7,7 +10,6 @@ import ecx.types.ComponentType;
 import ecx.ds.CArray;
 import ecx.ds.Cast;
 import ecx.ds.CBitArray;
-import ecx.managers.EntityManager;
 import ecx.macro.ClassMacroTools;
 import haxe.macro.Expr.ExprOf;
 
@@ -15,10 +17,8 @@ import haxe.macro.Expr.ExprOf;
 using ecx.managers.WorldDebug;
 #end
 
-@:final
-@:keep
-@:unreflective
-@:access(ecx.System, ecx.EntityView, ecx.Component, ecx.WorldConfig)
+@:final @:dce @:unreflective
+@:access(ecx.System, ecx.EntityView, ecx.Component, ecx.Family, ecx.Entity)
 class World {
 
 	// Mapping: (type, entity) => component
@@ -29,21 +29,29 @@ class World {
 
 	// Maximum amount of entities
 	public var capacity(default, null):Int;
+	public var used(default, null):Int = 0;
+	public var available(get, never):Int;
 
 	// global ref
 	public var engine(default, null):Engine;
-	public var entityManager(default, null):EntityManager;
 
-	var _systems:Array<System> = [];
-	var _priorities:Array<Int> = [];
-	var _lookup:Array<System> = [];
-	var _processors:Array<System> = [];
+	// lookup for all systems
+	var _lookup:CArray<System>;
+	// all systems sorted by priority
+	var _orderedSystems:CArray<System>;
+	// only active systems (not idle)
+	var _systems:CArray<System>;
+	// systems with families
+	var _processors:CArray<System>;
+
 	var _families:CArray<FamilyData>;
 
 	// alive entities
 	//var _entities:Array<Entity> = [];
 	var _changeList:Array<Entity> = [];
 	var _removeList:Array<Entity> = [];
+
+	var _pool:CInt32RingBuffer;
 
 	// entity => entity wrapper
 	var _mapToData:CArray<EntityData>;
@@ -54,20 +62,19 @@ class World {
 	var _changedFlags:CBitArray;
 	var _removedFlags:CBitArray;
 
-	function new(id:Int, engine:Engine, config:WorldConfig, capacity:Int = 0x40000) {
+	function new(id:Int, engine:Engine, config:WorldConfig, capacity:Int) {
 		this.id = id;
 		this.engine = engine;
-		this.capacity = capacity;
-		WorldConstructor.construct(this, config);
+		WorldConstructor.construct(this, capacity, config);
 	}
 
-	macro public function get<T:System>(self:ExprOf<World>, systemClass:ExprOf<Class<T>>):ExprOf<T> {
+	macro public function resolve<T:System>(self:ExprOf<World>, systemClass:ExprOf<Class<T>>):ExprOf<T> {
 		var systemType = ClassMacroTools.systemType(systemClass);
 		return macro ecx.ds.Cast.unsafe(@:privateAccess $self._lookup[$systemType.id], $systemClass);
 	}
 
 	public function create():Entity {
-		var entity = entityManager.alloc();
+		var entity = allocNextEntity();
 		_aliveMask.enable(entity.id);
 		_activeFlags.enable(entity.id);
 		return entity;
@@ -75,7 +82,7 @@ class World {
 
 	/** Useful for prefabs **/
 	public function createPassive():Entity {
-		var entity = entityManager.alloc();
+		var entity = allocNextEntity();
 		_aliveMask.enable(entity.id);
 		return entity;
 	}
@@ -110,7 +117,7 @@ class World {
 		lockFamilies();
 		#end
 
-		entityManager.deleteFromWorld(this, _removeList);
+		deleteEntityList(_removeList);
 
 		var changedFlags = _changedFlags;
 		var changeList = _changeList;
@@ -141,28 +148,34 @@ class World {
 		#end
 	}
 
-	public function placeInternal(entity:Entity) {
+	public function activate(entity:Entity) {
 		#if debug
 		guardEntity(entity);
 		if(_activeFlags.get(entity.id)) throw 'This entity is already active';
 		#end
 		_activeFlags.enable(entity.id);
-		// TODO:
-//		for(processor in _processors) {
-//			processor._internal_entityChanged(entity, true);
+//		for(typeId in 0...components.length) {
+//			var component:Component = components[typeId][entity.id];
+//			if(component != null) {
+//				component.onAdded();
+//			}
 //		}
+		_internal_entityChanged(entity);
 	}
 
-	public function unplaceInternal(entity:Entity) {
+	public function deactivate(entity:Entity) {
 		#if debug
 		guardEntity(entity);
 		if(!_activeFlags.get(entity.id)) throw "This entity is already inactive";
 		#end
 		_activeFlags.disable(entity.id);
-		// TODO:
-//		for(processor in _processors) {
-//			processor._internal_entityChanged(entity, false);
+//		for(typeId in 0...components.length) {
+//			var component:Component = components[typeId][entity.id];
+//			if(component != null) {
+//				component.onRemoved();
+//			}
 //		}
+		_internal_entityChanged(entity);
 	}
 
 	inline public function edit(entity:Entity):EntityView {
@@ -185,15 +198,6 @@ class World {
 		return 'World #$id';
 	}
 
-	function _internal_entityChanged(entity:Entity) {
-		#if debug
-		guardEntity(entity);
-		#end
-		if(_changedFlags.enableIfNot(entity.id)) {
-			_changeList.push(entity);
-		}
-	}
-
 	@:nonVirtual @:unreflective
 	public function addComponent<T:Component>(entity:Entity, component:T, type:ComponentType):T {
 		// workaround for old hxcpp
@@ -205,8 +209,8 @@ class World {
 		#end
 		comp.entity = entity;
 		comp.world = this;
+		comp.onAdded();
 		if(active) {
-			comp.onAdded();
 			_internal_entityChanged(entity);
 		}
 		return component;
@@ -217,12 +221,10 @@ class World {
 		return Cast.unsafe(components[type.id][entity.id], componentClass);
 	}
 
-	@:nonVirtual @:unreflective
 	inline public function hasComponent(entity:Entity, type:ComponentType):Bool {
 		return components[type.id][entity.id] != null;
 	}
 
-	@:nonVirtual @:unreflective
 	public function removeComponent(entity:Entity, type:ComponentType) {
 		var entityToComponent = components[type.id];
 		var component:Component = entityToComponent[entity.id];
@@ -231,8 +233,8 @@ class World {
 			component.checkComponentBeforeUnlink();
 			#end
 			var active = isActive(entity);
+			component.onRemoved();
 			if(active) {
-				component.onRemoved();
 				_internal_entityChanged(entity);
 			}
 			component.entity = Entity.INVALID;
@@ -241,7 +243,6 @@ class World {
 		}
 	}
 
-	@:nonVirtual @:unreflective
 	public function clearComponents(entity:Entity) {
 		var componentsData = components;
 		var active = isActive(entity);
@@ -252,8 +253,8 @@ class World {
 				component.checkComponentBeforeUnlink();
 				#end
 
+				component.onRemoved();
 				if(active) {
-					component.onRemoved();
 				}
 				component.entity = Entity.INVALID;
 				component.world = null;
@@ -264,6 +265,67 @@ class World {
 
 		if(active) {
 			_internal_entityChanged(entity);
+		}
+	}
+
+	/** Iterator for *alive* entities **/
+	inline public function entities():WorldEntitiesIterator {
+		return new WorldEntitiesIterator(_pool);
+	}
+
+	/** Iterator for *active* systems ordered by priority **/
+	inline public function systems():CArrayIterator<System> {
+		return new CArrayIterator<System>(_systems);
+	}
+
+	function allocNextEntity():Entity {
+		#if debug
+		if(used >= capacity) throw 'Out of entities, max allowed $capacity';
+		#end
+
+		++used;
+		return new Entity(_pool.pop());
+	}
+
+	inline function get_available():Int {
+		return capacity - used;
+	}
+
+	function deleteEntityList(list:Array<Entity>) {
+		var locPool:CInt32RingBuffer = _pool;
+		var locRemovedFlags = _removedFlags;
+		var locActiveFlags = _activeFlags;
+		var locAliveMask = _aliveMask;
+		var locMapToData = _mapToData;
+		while(list.length > 0) {
+			var count = list.length;
+			var i = 0;
+			while(i < count) {
+				var entity = list[i];
+				clearComponents(entity);
+				locActiveFlags.disable(entity.id);
+				locAliveMask.disable(entity.id);
+				locRemovedFlags.disable(entity.id);
+				locPool.push(entity.id);
+				++i;
+			}
+
+			used -= count;
+			#if debug
+			if(used < 0) throw "No way!";
+			#end
+
+			//if(startLength != removeList.length) throw "removing while removing";
+			list.splice(0, count);
+		}
+	}
+
+	function _internal_entityChanged(entity:Entity) {
+		#if debug
+		guardEntity(entity);
+		#end
+		if(_changedFlags.enableIfNot(entity.id)) {
+			_changeList.push(entity);
 		}
 	}
 }

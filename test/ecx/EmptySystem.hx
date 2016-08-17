@@ -10,7 +10,6 @@ class EmptySystem extends System {
 	public function new() {}
 
 	override function update() {
-		for(entity in _entities) {
-		}
+		for(entity in _entities) {}
 	}
 }

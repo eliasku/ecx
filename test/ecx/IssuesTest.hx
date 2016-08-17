@@ -54,7 +54,7 @@ class IssuesTest extends EcxTest {
 	}
 
 	public function testGetMacro() {
-		var expectedEntitiesCount:Int = world.entityManager.used;
+		var expectedEntitiesCount:Int = world.used;
 
 		// entity need to be created once!
 		Assert.isNull(world.edit(world.create()).get(TestPosition));
@@ -65,6 +65,6 @@ class IssuesTest extends EcxTest {
 		Assert.isNull((e != world.edit(world.create()) ? e : null).tryGet(TestPosition));
 		expectedEntitiesCount++;
 
-		Assert.equals(expectedEntitiesCount, world.entityManager.used);
+		Assert.equals(expectedEntitiesCount, world.used);
 	}
 }
