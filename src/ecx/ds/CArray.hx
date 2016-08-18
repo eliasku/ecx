@@ -69,12 +69,23 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 		return new CArrayIterator<T>(this);
 	}
 
-	@:generic
 	inline public static function fromArray<T>(array:Array<T>):CArray<T> {
+		#if (cpp||python)
+		return array.copy();
+		#elseif flash
+		return flash.Vector.ofArray(array);
+		#elseif java
+		return java.Lib.nativeArray(array, false);
+		#elseif cs
+		return cs.Lib.nativeArray(array, false);
+		#elseif (neko||macro)
+		return neko.NativeArray.ofArrayCopy(array);
+		#else
 		var result = new CArray<T>(array.length);
 		for(i in 0...array.length) {
 			result[i] = array[i];
 		}
 		return result;
+		#end
 	}
 }
