@@ -17,8 +17,8 @@ branches:
 
 env:
     matrix:
-    - TARGET=interp,neko
-    - TARGET=flash,js,node
+    - TARGET=neko,node
+    - TARGET=flash,js
     - TARGET=cpp
     - TARGET=cs,java
 
