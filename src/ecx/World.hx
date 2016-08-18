@@ -70,7 +70,10 @@ class World {
 
 	macro public function resolve<T:System>(self:ExprOf<World>, systemClass:ExprOf<Class<T>>):ExprOf<T> {
 		var systemType = ClassMacroTools.systemType(systemClass);
-		return macro ecx.ds.Cast.unsafe(@:privateAccess $self._lookup[$systemType.id], $systemClass);
+		return macro {
+			var tmp = @:privateAccess $self._lookup[$systemType.id];
+			ecx.ds.Cast.unsafe(tmp, $systemClass);
+		}
 	}
 
 	public function create():Entity {
