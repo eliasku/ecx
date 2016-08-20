@@ -14,7 +14,7 @@
 	"contributors": [
 		"eliasku"
 	],
-	"releasenote": "start-up api",
-	"version": "0.0.3",
+	"releasenote": "global entities iterator removed, onEntityRemoved fix",
+	"version": "0.0.4",
 	"url": "https://github.com/eliasku/ecx"
 }
