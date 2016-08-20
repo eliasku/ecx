@@ -24,7 +24,7 @@ class EcxMake extends hxmake.Module {
 			ext.config.tags = ["entity", "component", "system", "ecs", "ces", "cross"];
 			ext.config.contributors = ["eliasku"];
 			ext.config.license = "MIT";
-			ext.config.releasenote = "start-up api";
+			ext.config.releasenote = "global entities iterator removed, onEntityRemoved fix";
 
 			ext.pack.includes = ["src", "haxelib.json", "README.md"];
 		});
