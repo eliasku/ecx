@@ -1,7 +1,6 @@
 package ecx;
 
 import ecx.ds.CArrayIterator;
-import ecx.types.WorldEntitiesIterator;
 import ecx.ds.CInt32RingBuffer;
 import ecx.managers.WorldConstructor;
 import ecx.types.FamilyData;
@@ -120,8 +119,7 @@ class World {
 		lockFamilies();
 		#end
 
-		preDeleteEntities(_removeList);
-		deleteEntityList(_removeList);
+		deleteEntities(_removeList);
 		changeEntities(_changeList);
 
 		#if debug
@@ -251,9 +249,9 @@ class World {
 	}
 
 	/** Iterator for *alive* entities **/
-	inline public function entities():WorldEntitiesIterator {
-		return new WorldEntitiesIterator(_pool);
-	}
+//	inline public function entities():WorldEntitiesIterator {
+//		return new WorldEntitiesIterator(_pool);
+//	}
 
 	/** Iterator for *active* systems ordered by priority **/
 	inline public function systems():CArrayIterator<System> {
@@ -273,43 +271,23 @@ class World {
 		return capacity - used;
 	}
 
-	/** Need to remove entities from families before deletion and notify systems **/
-	function preDeleteEntities(entities:Array<Entity>) {
-//		var families = _families;
-//		var i = 0;
-//		while(i < entities.length) {
-//			var tail = entities.length;
-//			while(i < tail) {
-//				var entity = entities[i];
-//				for(j in 0...families.length) {
-//					@:privateAccess families.get(j)._internal_entityChanged(entity, false);
-//				}
-//				++i;
-//			}
-//		}
-	}
-
-	function deleteEntityList(entities:Array<Entity>) {
+	function deleteEntities(entities:Array<Entity>) {
 		var locPool:CInt32RingBuffer = _pool;
 		var locRemovedFlags = _removedFlags;
 		var locActiveFlags = _activeFlags;
 		var locAliveMask = _aliveMask;
 		var families = _families;
-//		var i = 0;
-		while(entities.length > 0) {
-//			var tail = entities.length;
-//			while(i < tail) {
-//				var entity = entities[i];
-//				for(j in 0...families.length) {
-//					@:privateAccess families.get(j)._internal_entityChanged(entity, false);
-//				}
-			var count = entities.length;
-			var i = 0;
-			while(i < count) {
+		var i = 0;
+		while(i < entities.length) {
+			var tail = entities.length;
+			while(i < tail) {
 				var entity = entities[i];
-//				for(j in 0...families.length) {
-//					@:privateAccess families.get(j)._internal_entityChanged(entity, false);
-//				}
+
+				// Need to remove entities from families before deletion and notify systems
+				for(j in 0...families.length) {
+					@:privateAccess families.get(j)._internal_entityChanged(entity, false);
+				}
+
 				clearComponents(entity);
 				locActiveFlags.disable(entity.id);
 				locAliveMask.disable(entity.id);
@@ -317,25 +295,17 @@ class World {
 				locPool.push(entity.id);
 				++i;
 			}
+		}
 
+		var count = entities.length;
+		if(count > 0) {
 			used -= count;
 			#if debug
 			if(used < 0) throw "No way!";
 			#end
-
 			//if(startLength != removeList.length) throw "removing while removing";
 			entities.splice(0, count);
 		}
-
-//		var count = entities.length;
-//		if(count > 0) {
-//			used -= count;
-//			#if debug
-//			if(used < 0) throw "No way!";
-//			#end
-//			//if(startLength != removeList.length) throw "removing while removing";
-//			entities.splice(0, count);
-//		}
 	}
 
 	function changeEntities(entities:Array<Entity>) {
@@ -349,13 +319,13 @@ class World {
 			var end = entities.length;
 			while (i < end) {
 				var entity = entities[i];
-//				var alive = aliveMask.get(entity.id);
-//				if(alive) {
+				var alive = aliveMask.get(entity.id);
+				if(alive) {
 					var active = activeFlags.get(entity.id);
 					for(j in 0...families.length) {
 						@:privateAccess families.get(j)._internal_entityChanged(entity, active);
 					}
-//				}
+				}
 				changedFlags.disable(entity.id);
 				++i;
 			}
