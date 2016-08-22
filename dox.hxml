@@ -1,0 +1,13 @@
+-cp src
+-debug
+-D dox
+-dce no
+--macro haxe.macro.Compiler.include("", true, [], ["src"])
+-xml bin/ecx.xml
+-js bin/none.js
+--no-output
+--next
+-cmd haxelib run dox -i bin/ecx.xml -o bin/api-minimal --toplevel-package ecx
+-cmd nekotools server -d bin/api-minimal
+
+

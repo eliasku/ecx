@@ -10,13 +10,17 @@ import haxe.macro.Expr;
 using ecx.macro.ClassMacroTools;
 
 /**
- Initialization:
- - all constructed via configuration
- - all injected
- - all initialized
- - updates
-**/
+	Service-based system type. System unify world-scope Context or Behaviour
 
+	Initialization steps:
+	- all systems are constructed via world-configuration
+	- all systems are wired with each other
+	- all systems are initialized
+	- systems are able to be updated (if not IDLE)
+
+	@see ecx.Wire
+	@see ecx.Family
+**/
 #if !macro
 @:autoBuild(ecx.macro.TypeBuilder.build(1))
 #end
@@ -24,6 +28,9 @@ using ecx.macro.ClassMacroTools;
 @:access(ecx.FamilyData)
 class System {
 
+	/**
+		World context
+	**/
 	@:unreflective
 	public var world(default, null):World;
 

@@ -1,9 +1,11 @@
 package ecx;
 
 import ecx.types.TypeInfo;
-import ecx.ds.CArray;
 import ecx.types.TypeManager;
 
+/**
+	Engine store global data about types and manage world's allocation worlds
+**/
 @:unreflective
 @:final
 @:access(ecx.World)

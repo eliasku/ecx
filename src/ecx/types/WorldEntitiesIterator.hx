@@ -1,4 +1,4 @@
-//package ecx.types;
+package ecx.types;
 //
 //import ecx.ds.CInt32RingBuffer;
 //import ecx.ds.CInt32Array;
