@@ -1,6 +1,5 @@
 package ecx;
 
-import ecx.types.ComponentsArrayData;
 import ecx.ds.CArray;
 
 // TODO: compile-time error if not component type or not @:base component type
@@ -11,9 +10,8 @@ import ecx.ds.CArray;
 @:dce
 abstract MapTo<T:Component>(CArray<T>) {
 
-	//TODO: add ':Component' (after IDEA will be fixed)
-	@:generic inline public function new<T:Component>(cls:Class<T>, arr:ComponentsArrayData) {
-		this = cast arr;
+	@:generic inline public function new<T:Component>(componentClass:Class<T>, componentsArray:CArray<T>) {
+		this = componentsArray;
 	}
 
 	@:arrayAccess

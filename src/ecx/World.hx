@@ -47,8 +47,6 @@ class World {
 
 	var _families:CArray<FamilyData>;
 
-	// alive entities
-	//var _entities:Array<Entity> = [];
 	var _changeList:Array<Entity> = [];
 	var _removeList:Array<Entity> = [];
 
@@ -136,12 +134,6 @@ class World {
 		if(_activeFlags.get(entity.id)) throw 'This entity is already active';
 		#end
 		_activeFlags.enable(entity.id);
-//		for(typeId in 0...components.length) {
-//			var component:Component = components[typeId][entity.id];
-//			if(component != null) {
-//				component.onAdded();
-//			}
-//		}
 		_internal_entityChanged(entity);
 	}
 
@@ -151,12 +143,6 @@ class World {
 		if(!_activeFlags.get(entity.id)) throw "This entity is already inactive";
 		#end
 		_activeFlags.disable(entity.id);
-//		for(typeId in 0...components.length) {
-//			var component:Component = components[typeId][entity.id];
-//			if(component != null) {
-//				component.onRemoved();
-//			}
-//		}
 		_internal_entityChanged(entity);
 	}
 
@@ -165,7 +151,7 @@ class World {
 	}
 
 	macro public function mapTo<T:Component>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
-		return macro new ecx.MapTo($componentClass, $self.components[$componentClass.__TYPE.id]);
+		return macro new ecx.MapTo($componentClass, cast $self.components[$componentClass.__TYPE.id]);
 	}
 
 	inline public function isActive(entity:Entity):Bool {
@@ -209,11 +195,7 @@ class World {
 
 	public function removeComponent(entity:Entity, type:ComponentType) {
 		var entityToComponent:ComponentsArrayData = components[type.id];
-//		#if flash
-//		var component:Component = untyped entityToComponent[entity.id];
-//		#else
 		var component:Component = entityToComponent[entity.id];
-//		#end
 
 		if(component != null) {
 			#if debug

@@ -24,8 +24,6 @@ class TypeBuilder {
 		var pos = Context.currentPos();
 		if(kind == TypeKind.COMPONENT) {
 			cls.meta.add(":unreflective", [], pos);
-			//cls.meta.add(":final", [], pos);
-			//cls.meta.add(":keep", [], pos);
 		}
 
 		var typeInfo = getTypeInfo(kind, cls);
@@ -48,7 +46,6 @@ class TypeBuilder {
 		TypeMacroDebug.print(typeInfo);
 
 		var fields:Array<Field> = Context.getBuildFields();
-		// TODO: specId
 		var fieldsExpr = macro {
 			var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
 			var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
@@ -259,21 +256,6 @@ class TypeBuilder {
 		var superClass = classType.superClass.t.get();
 		return superClass.meta.has(":base");
 	}
-
-//	public macro static function createComponents(self:ExprOf<ecx.Engine>, cap:ExprOf<Int>) {
-//		var exprs:Array<Expr> = [];
-//		var map:Map<String, TypeMacroData> = CACHE.get(0);
-//		for(ti in map) {
-//			var p:Array<String> = ti.path.split(".");
-//			var name = p.pop();
-//			var typeParam = TypeParam.TPType(ComplexType.TPath({name:name, pack:p}));
-//			var tp:TypePath = {name:"CArray", pack:["ecx", "ds"], params:[typeParam]};
-//			//return macro @:pos(Context.currentPos())@:privateAccess new $tp();
-//			var expr = macro $self.components[$v{ti.id}] = new $tp($cap + 1);
-//			exprs.push(expr);
-//		}
-//		return macro @:pos(Context.currentPos()) $b{exprs};
-//	}
 }
 
 #end

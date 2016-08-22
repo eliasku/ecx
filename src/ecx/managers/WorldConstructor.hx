@@ -2,8 +2,6 @@ package ecx.managers;
 
 import ecx.types.ComponentTable;
 import ecx.types.ComponentTableData;
-import ecx.types.ComponentsArrayData;
-import ecx.types.ComponentTableData;
 import ecx.types.ComponentType;
 import ecx.ds.CBitArray;
 import ecx.types.EntityData;
@@ -105,7 +103,6 @@ class WorldConstructor {
 	}
 
 	static function routeSystems(world:World) {
-		// var systems = world._orderedSystems;
 		var processors = [];
 		var active = [];
 
