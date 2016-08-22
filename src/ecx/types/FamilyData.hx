@@ -18,7 +18,7 @@ class FamilyData {
 
     function new(system:System) {
         var capacity = system.world.capacity;
-        entities = new CVector();
+        entities = new CVector<Entity>();
         _containedBits = new CBitArray(capacity);
         _system = system;
     }
