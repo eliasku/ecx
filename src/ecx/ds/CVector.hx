@@ -6,8 +6,8 @@ private typedef BufferData<T> = flash.Vector<T>;
 private typedef BufferData<T> = Array<T>;
 #end
 
+// TODO: java ArrayList
 // TODO: @:generic only for `cpp` target?
-
 @:generic @:dce @:unreflective @:final
 class CVector<T> {
 

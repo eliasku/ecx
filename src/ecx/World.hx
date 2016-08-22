@@ -1,5 +1,7 @@
 package ecx;
 
+import ecx.types.ComponentsArrayData;
+import ecx.types.ComponentTableData;
 import ecx.ds.CArrayIterator;
 import ecx.ds.CInt32RingBuffer;
 import ecx.managers.WorldConstructor;
@@ -21,11 +23,7 @@ using ecx.managers.WorldDebug;
 class World {
 
 	// Mapping: (type, entity) => component
-//	#if flash
-//	public var components(default, null):CArray<Dynamic>;
-//	#else
-	public var components(default, null):CArray<CArray<Component>>;
-//	#end
+	public var components(default, null):ComponentTableData;
 
 	// Identifier of this world
 	public var id(default, null):Int;
@@ -184,7 +182,7 @@ class World {
 
 	@:nonVirtual @:unreflective
 	public function addComponent<T:Component>(entity:Entity, component:T, type:ComponentType):T {
-		// workaround for old hxcpp
+		// workaround for haxe < 3.3: cpp generation (avoid dynamic_cast<>)
 		var comp:Component = component;
 		components[type.id][entity.id] = comp;
 		var active = isActive(entity);
@@ -210,11 +208,10 @@ class World {
 	}
 
 	public function removeComponent(entity:Entity, type:ComponentType) {
+		var entityToComponent:ComponentsArrayData = components[type.id];
 //		#if flash
-//		var entityToComponent:Dynamic = components[type.id];
 //		var component:Component = untyped entityToComponent[entity.id];
 //		#else
-		var entityToComponent = components[type.id];
 		var component:Component = entityToComponent[entity.id];
 //		#end
 

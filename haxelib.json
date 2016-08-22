@@ -14,7 +14,7 @@
 	"contributors": [
 		"eliasku"
 	],
-	"releasenote": "global entities iterator removed, onEntityRemoved fix",
-	"version": "0.0.4",
+	"releasenote": "Typed component-table data",
+	"version": "0.0.5",
 	"url": "https://github.com/eliasku/ecx"
 }

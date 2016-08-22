@@ -74,27 +74,6 @@ class TypeBuilder {
 			fields = fields.concat(FieldsBuilder.build(cloneExpr));
 		}
 
-		if(kind == TypeKind.COMPONENT && typeInfo.isBase) {
-//			var collectionTypePath = {
-//				pack: ["ecx", "ds"],
-//				name: "CArray",
-//				params: [TypeParam.TPType(componentType)],
-//				sub: null
-//			};
-//			trace("BAAAAASE!!");
-//			var tarr = macro {
-//				function static_X__init__() {
-//					if(@:privateAccess ecx.types.TypeManager._newvec == null) {
-//						@:privateAccess ecx.types.TypeManager._newvec = [];
-//					}
-//					@:privateAccess ecx.types.TypeManager._newvec[$typeId] = function(capacity:Int) {
-//						return new $collectionTypePath(capacity);
-//					}
-//				}
-//			}
-//			fields = fields.concat(FieldsBuilder.build(tarr));
-		}
-
 		if(kind == TypeKind.SYSTEM) {
 			var injExprs:Array<Expr> = [];
 			addConfigurator(cls, fields, injExprs);

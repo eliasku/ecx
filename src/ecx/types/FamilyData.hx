@@ -13,11 +13,7 @@ class FamilyData {
     public var entities(default, null):CVector<Entity>;
 
     var _containedBits:CBitArray;
-//    #if flash
-//    var _requiredComponents:CArray<Dynamic>;
-//    #else
-    var _requiredComponents:CArray<CArray<Component>>;
-//    #end
+    var _requiredComponents:ComponentTableData;
     var _system:System;
 
     function new(system:System) {

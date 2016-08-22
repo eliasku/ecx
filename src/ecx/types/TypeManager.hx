@@ -5,13 +5,7 @@ package ecx.types;
 @:access(ecx.types.TypeInfo)
 class TypeManager {
 
-//    @:keep
-//    static var _newvec:Array<Dynamic> = [];
-
     static inline var META_FIELDS_PER_INFO:Int = 5;
-//
-//    public var compalcl(default, null):Array<Dynamic> = [];
-//    public var compal(default, null):Array<Dynamic> = [];
 
     public var components(default, null):Array<TypeInfo> = [];
     public var componentsNextTypeId(default, null):Int;
@@ -37,22 +31,6 @@ class TypeManager {
 
             switch(kind) {
                 case TypeKind.COMPONENT:
-
-//                    if(basePath == path && compalcl[typeId] == null) {
-//                        compalcl[typeId] = Type.resolveClass(path);
-//                        if(compalcl[typeId] != null) {
-//                            var inst = Type.createInstance(compalcl[typeId], []);
-//                            throw Reflect.fields(inst).join(",");
-//                        }
-//                        compal[typeId] = Reflect.field(compalcl[typeId], "__allocTypedArray");
-//
-//                        if(compalcl[typeId] == null) throw "failed class for " + typeId + " " + path + " " + basePath;
-////                        if(compal[typeId] == null) {
-////                            throw "failed for " + typeId + " " + path + " " + basePath + " " + compalcl[typeId] + " " +
-////                            [for(k in Reflect.fields(compalcl[typeId])) k].join(" ");
-////                        }
-//                    }
-
                     components.push(info);
                     if(typeId > maxComponentTypeId) {
                         maxComponentTypeId = typeId;
@@ -64,5 +42,14 @@ class TypeManager {
             i += META_FIELDS_PER_INFO;
         }
         componentsNextTypeId = maxComponentTypeId + 1;
+    }
+
+    public function getTypeInfoByComponentType(componentType:ComponentType):TypeInfo {
+        for(typeInfo in components) {
+            if(typeInfo.typeId == componentType.id) {
+                return typeInfo;
+            }
+        }
+        throw 'Component type-info with type: ${componentType.id} not found';
     }
 }
