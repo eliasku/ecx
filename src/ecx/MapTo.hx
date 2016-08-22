@@ -1,19 +1,18 @@
 package ecx;
 
+import ecx.types.ComponentsArrayData;
 import ecx.ds.CArray;
 
 // TODO: compile-time error if not component type or not @:base component type
-
-private typedef MapToData<T> = CArray<T>;
 
 @:generic
 @:final
 @:unreflective
 @:dce
-abstract MapTo<T>(MapToData<T>) {
+abstract MapTo<T:Component>(CArray<T>) {
 
 	//TODO: add ':Component' (after IDEA will be fixed)
-	@:generic inline public function new<T:Component>(arr:MapToData<T>) {
+	@:generic inline public function new<T:Component>(cls:Class<T>, arr:ComponentsArrayData) {
 		this = cast arr;
 	}
 

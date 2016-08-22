@@ -165,7 +165,7 @@ class World {
 	}
 
 	macro public function mapTo<T:Component>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
-		return macro new MapTo($self.components[$componentClass.__TYPE.id]);
+		return macro new ecx.MapTo($componentClass, $self.components[$componentClass.__TYPE.id]);
 	}
 
 	inline public function isActive(entity:Entity):Bool {
