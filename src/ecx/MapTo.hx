@@ -6,6 +6,7 @@ import ecx.ds.CArray;
 // TODO: typed component storage
 
 #if (flash||cs||java)
+//#if (cs||java)
 private typedef MapToData<T> = CArray<Component>;
 #else
 private typedef MapToData<T> = CArray<T>;
@@ -25,6 +26,7 @@ abstract MapTo<T>(MapToData<T>) {
 
 	@:arrayAccess
 	inline public function get(entity:Entity):T {
+//		#if (cs||java)
 		#if (flash||cs||java)
 		return cast this[entity.id];
 		#else

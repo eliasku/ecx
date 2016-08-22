@@ -21,7 +21,11 @@ using ecx.managers.WorldDebug;
 class World {
 
 	// Mapping: (type, entity) => component
+//	#if flash
+//	public var components(default, null):CArray<Dynamic>;
+//	#else
 	public var components(default, null):CArray<CArray<Component>>;
+//	#end
 
 	// Identifier of this world
 	public var id(default, null):Int;
@@ -163,7 +167,7 @@ class World {
 	}
 
 	macro public function mapTo<T:Component>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
-		return macro new MapTo(cast $self.components[$componentClass.__TYPE.id]);
+		return macro new MapTo($self.components[$componentClass.__TYPE.id]);
 	}
 
 	inline public function isActive(entity:Entity):Bool {
@@ -206,8 +210,14 @@ class World {
 	}
 
 	public function removeComponent(entity:Entity, type:ComponentType) {
+//		#if flash
+//		var entityToComponent:Dynamic = components[type.id];
+//		var component:Component = untyped entityToComponent[entity.id];
+//		#else
 		var entityToComponent = components[type.id];
 		var component:Component = entityToComponent[entity.id];
+//		#end
+
 		if(component != null) {
 			#if debug
 			component.checkComponentBeforeUnlink();

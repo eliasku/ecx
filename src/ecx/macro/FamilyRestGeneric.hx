@@ -15,8 +15,8 @@ class FamilyRestGeneric {
         };
 
         var tpCollection = {
-            pack: [],
-            name: "Array",
+            pack: ["ecx", "ds"],
+            name: "CVector",
             params: [TypeParam.TPType(ComplexType.TPath(tpEntity))]
         };
 

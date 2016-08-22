@@ -51,7 +51,7 @@ class TypeBuilder {
 		// TODO: specId
 		var fieldsExpr = macro {
 			var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
-			var public_Xstatic_Xinline_X_SPEC_ID = $specId;
+			var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
 			function override_X__getType() { return new $tpType($typeId); }
 			function override_X__getSpec() { return new $tpSpec($specId); }
 		}
@@ -65,27 +65,34 @@ class TypeBuilder {
 			}
 		}
 
-		if(kind == 0 && hasConstructor) {
-			var collectionTypePath = {
-				pack: ["ecx", "ds"],
-				name: "CArray",
-				params: [TypeParam.TPType(componentType)],
-				sub: null
-			};
+		if(kind == TypeKind.COMPONENT && hasConstructor) {
 			var cloneExpr = macro {
 				function override_Xpublic_X_newInstance():ecx.Component {
 					return new $tp();
 				}
-
-			// TODO: typed component storage
-//				function static_Xprivate_X_allocTypedArray(capacity:Int):Dynamic {
-//					trace("ALLOC: " + _TYPE_ID);
-//					return new $collectionTypePath(capacity);
-//				}
 			}
+			fields = fields.concat(FieldsBuilder.build(cloneExpr));
+		}
 
-			var cloneFields = FieldsBuilder.build(cloneExpr);
-			fields = fields.concat(cloneFields);
+		if(kind == TypeKind.COMPONENT && typeInfo.isBase) {
+//			var collectionTypePath = {
+//				pack: ["ecx", "ds"],
+//				name: "CArray",
+//				params: [TypeParam.TPType(componentType)],
+//				sub: null
+//			};
+//			trace("BAAAAASE!!");
+//			var tarr = macro {
+//				function static_X__init__() {
+//					if(@:privateAccess ecx.types.TypeManager._newvec == null) {
+//						@:privateAccess ecx.types.TypeManager._newvec = [];
+//					}
+//					@:privateAccess ecx.types.TypeManager._newvec[$typeId] = function(capacity:Int) {
+//						return new $collectionTypePath(capacity);
+//					}
+//				}
+//			}
+//			fields = fields.concat(FieldsBuilder.build(tarr));
 		}
 
 		if(kind == TypeKind.SYSTEM) {

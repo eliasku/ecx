@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.ds.CVector;
 import ecx.types.FamilyData;
 import ecx.types.SystemFlags;
 import ecx.types.SystemSpec;
@@ -63,13 +64,13 @@ class System {
 		}
 	}
 
-	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<Array<Entity>> {
+	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<CVector<Entity>> {
 		var componentTypeList = requiredComponents.componentTypeList();
 		return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypeList));
 	}
 
 	@:nonVirtual @:unreflective
-	function _addFamily(family:FamilyData):Array<Entity> {
+	function _addFamily(family:FamilyData):CVector<Entity> {
 		if(_families == null) {
 			_families = [];
 			_flags = _flags.add(SystemFlags.PROCESSOR);

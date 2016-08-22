@@ -6,7 +6,6 @@ import ecx.ds.CInt32RingBuffer;
 import ecx.ds.CArray;
 import ecx.types.FamilyData;
 
-
 @:dce @:final @:unreflective
 @:access(ecx.World, ecx.System, ecx.Engine, ecx.Entity)
 @:access(ecx.WorldConfig, ecx.types.EntityData)
@@ -42,10 +41,30 @@ class WorldConstructor {
 		var capacity = world.capacity;
 		var typesCount = world.engine.getComponentTypesCount();
 
+//		#if flash
+//		var components:CArray<Dynamic> = new CArray(typesCount);
+//		for(i in 0...typesCount) {
+//			var types = world.engine._types;
+////			var cls = types.compalcl[i];
+////			Type.getClassFields(cls);
+////			if(cls == null) throw "No class for " + i;
+////			var method = types.compal[i];
+////			if(method != null) {
+////				var vec = Reflect.callMethod(cls, method, [capacity]);
+////				components[i] = vec;
+////			}
+////			else {
+////
+////				throw "No method for " + i + " " + Type.getClassFields(cls).join(",");
+////			}
+//			components[i] = @:privateAccess TypeManager._newvec[i](capacity);
+//		}
+//		#else
 		var components:CArray<CArray<Component>> = new CArray(typesCount);
 		for(i in 0...typesCount) {
 			components[i] = new CArray(capacity);
 		}
+//		#end
 
 		world.components = components;
 	}

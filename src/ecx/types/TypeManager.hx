@@ -5,9 +5,11 @@ package ecx.types;
 @:access(ecx.types.TypeInfo)
 class TypeManager {
 
-    static inline var META_FIELDS_PER_INFO:Int = 5;
+//    @:keep
+//    static var _newvec:Array<Dynamic> = [];
 
-    // TODO: typed component storage
+    static inline var META_FIELDS_PER_INFO:Int = 5;
+//
 //    public var compalcl(default, null):Array<Dynamic> = [];
 //    public var compal(default, null):Array<Dynamic> = [];
 
@@ -35,9 +37,22 @@ class TypeManager {
 
             switch(kind) {
                 case TypeKind.COMPONENT:
-                    // TODO: typed component storage
-//                compalcl[id] = Type.resolveClass(fullname);
-//                compal[id] = Reflect.field(compalcl[id], "_allocTypedArray");
+
+//                    if(basePath == path && compalcl[typeId] == null) {
+//                        compalcl[typeId] = Type.resolveClass(path);
+//                        if(compalcl[typeId] != null) {
+//                            var inst = Type.createInstance(compalcl[typeId], []);
+//                            throw Reflect.fields(inst).join(",");
+//                        }
+//                        compal[typeId] = Reflect.field(compalcl[typeId], "__allocTypedArray");
+//
+//                        if(compalcl[typeId] == null) throw "failed class for " + typeId + " " + path + " " + basePath;
+////                        if(compal[typeId] == null) {
+////                            throw "failed for " + typeId + " " + path + " " + basePath + " " + compalcl[typeId] + " " +
+////                            [for(k in Reflect.fields(compalcl[typeId])) k].join(" ");
+////                        }
+//                    }
+
                     components.push(info);
                     if(typeId > maxComponentTypeId) {
                         maxComponentTypeId = typeId;

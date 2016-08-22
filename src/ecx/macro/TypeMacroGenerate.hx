@@ -29,8 +29,8 @@ class TypeMacroGenerate {
                     macro $v{ti.kind},
                     macro $v{ti.path},
                     macro $v{ti.basePath},
-                    macro $v{ti.specId},
-                    macro $v{ti.typeId}
+                    macro $v{ti.typeId},
+                    macro $v{ti.specId}
                 ]);
             }
         }

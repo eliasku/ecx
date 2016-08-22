@@ -1,5 +1,6 @@
 package ecx.types;
 
+import ecx.ds.CVector;
 import ecx.ds.CArray;
 import ecx.ds.CBitArray;
 
@@ -9,14 +10,19 @@ import ecx.ds.CBitArray;
 @:access(ecx.System, ecx.EntityView)
 class FamilyData {
 
-    public var entities(default, null):Array<Entity> = [];
+    public var entities(default, null):CVector<Entity>;
 
     var _containedBits:CBitArray;
+//    #if flash
+//    var _requiredComponents:CArray<Dynamic>;
+//    #else
     var _requiredComponents:CArray<CArray<Component>>;
+//    #end
     var _system:System;
 
     function new(system:System) {
         var capacity = system.world.capacity;
+        entities = new CVector();
         _containedBits = new CBitArray(capacity);
         _system = system;
     }
@@ -47,7 +53,7 @@ class FamilyData {
         var contained = _containedBits.get(entity.id);
         if(matched && !contained) {
             #if debug
-            if(entities.indexOf(entity) >= 0) throw "Family flags assets: id duplicated";
+            if(entities.has(entity)) throw "Family flags assets: id duplicated";
             #end
 
             _containedBits.enable(entity.id);
@@ -60,7 +66,7 @@ class FamilyData {
         }
         else if(!matched && contained) {
             #if debug
-            if(entities.indexOf(entity) < 0) throw "Family flags assets: id not found";
+            if(!entities.has(entity)) throw "Family flags assets: id not found";
             #end
 
             _containedBits.disable(entity.id);
@@ -68,13 +74,13 @@ class FamilyData {
             _system.onEntityRemoved(entity, this);
 
             #if debug
-            if(entities.indexOf(entity) >= 0) throw "Family flags assets: id duplicated";
+            if(entities.has(entity)) throw "Family flags assets: id duplicated";
             if(_containedBits.get(entity.id)) throw "Family flags assets: can't disable";
             #end
         }
 
         #if debug
-        if(active == false && entities.indexOf(entity) >= 0) {
+        if(active == false && entities.has(entity)) {
             throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
         }
         #end
@@ -87,7 +93,7 @@ class FamilyData {
         if(_debugEntitiesCopy == null) return;
         if(_debugEntitiesCopy.length != entities.length) throw 'Family assert: entity list access violation';
         for(i in 0..._debugEntitiesCopy.length) {
-            if(_debugEntitiesCopy[i] != entities[i]) throw 'Family assert: entity list access violation (bad element at $i';
+            if(_debugEntitiesCopy[i] != entities.get(i)) throw 'Family assert: entity list access violation (bad element at $i';
         }
 
     }
