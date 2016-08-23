@@ -20,7 +20,7 @@ class TypeManager {
         }
 
         var i = 0;
-        var maxComponentTypeId = 0;
+        var maxComponentTypeId = -1;
         while(i < typesData.length) {
             var kind = typesData[i];
             var path = typesData[i + 1];

@@ -2,10 +2,10 @@ package ecx.macro;
 
 #if macro
 
-import ecx.types.ComponentSpec;
-import ecx.types.SystemSpec;
 import ecx.types.SystemType;
+import ecx.types.SystemSpec;
 import ecx.types.ComponentType;
+import ecx.types.ComponentSpec;
 import haxe.macro.Expr;
 
 @:final

@@ -72,10 +72,3 @@ var world = Engine.initialize().createWorld(config, ?potCapacity);
 
 ## RTTI
 `TypeManager`
-
-# TODO
-* List of entities should be target-optimized `EntityVector`
-* CBitArray target-optimized underlying data
-* Examples
-* Unit tests
-* README
