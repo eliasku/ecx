@@ -34,7 +34,7 @@ class ClassMacroTools {
 
 	public static function allocComponent<T:Component>(componentClass:ExprOf<Class<T>>):ExprOf<T> {
 		var tp = MacroUtil.getConstTypePath(componentClass);
-		return macro @:privateAccess new $tp();
+		return macro @:privateAccess @:pos($v{componentClass.pos}) new $tp();
 	}
 }
 
