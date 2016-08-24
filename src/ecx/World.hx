@@ -197,6 +197,12 @@ class World {
 		}
 	}
 
+	inline public function commit(entity:Entity) {
+		if(isActive(entity)) {
+			_internal_entityChanged(entity);
+		}
+	}
+
 	/** Iterator for *alive* entities **/
 //	inline public function entities():WorldEntitiesIterator {
 //		return new WorldEntitiesIterator(_pool);

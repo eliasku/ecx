@@ -17,16 +17,6 @@ class SystemBuilder {
 			return null;
 		}
 
-		trace("----- " + cls.name);
-		if(cls.meta.has(":generic")) {
-			trace("GENERIC: " + cls.name);
-			cls.meta.add(":autoBuild", [
-				macro ecx.macro.SystemBuilder.build(1)
-			], cls.pos);
-//			//var t = Context.getType(cls.name);
-//			return null;
-		}
-
 		MacroBuildDebug.begin();
 		MacroBuildGenerate.invoke();
 
@@ -58,13 +48,11 @@ class SystemBuilder {
 		}
 		FieldsBuilder.push(fields, fieldsExpr);
 
-		if(!cls.meta.has(":generic")) {
-			var staticTypesExpr = macro {
-				var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
-				var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
-			}
-			FieldsBuilder.push(fields, staticTypesExpr);
+		var staticTypesExpr = macro {
+			var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
+			var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
 		}
+		FieldsBuilder.push(fields, staticTypesExpr);
 
 		var compData = getComponentType(cls);
 		if(compData != null) {
@@ -75,12 +63,10 @@ class SystemBuilder {
 			}
 			FieldsBuilder.push(fields, compExprs);
 
-			if(!cls.meta.has(":generic")) {
-				var staticCompExprs = macro {
-					var public_Xstatic_Xinline_X__COMPONENT_TYPE = new ecx.types.ComponentType($compTypeId);
-				}
-				FieldsBuilder.push(fields, staticCompExprs);
+			var staticCompExprs = macro {
+				var public_Xstatic_Xinline_X__COMPONENT_TYPE = new ecx.types.ComponentType($compTypeId);
 			}
+			FieldsBuilder.push(fields, staticCompExprs);
 		}
 
 		var injExprs:Array<Expr> = [];
