@@ -14,9 +14,10 @@ class ComponentTest extends EcxTest {
 	}
 
 	public function testComponentCreate() {
-		var e = world.edit(world.create());
+		var e = world.create();
+		var value:Value = world.resolve(Value);
 
-		var v:Value = e.create(Value);
+		var v:ValueData = value.create(e);
 		Assert.notNull(v);
 		Assert.equals(e.id, v.entity.id);
 		Assert.equals(world, v.world);
@@ -24,7 +25,8 @@ class ComponentTest extends EcxTest {
 		v.value = 10;
 		Assert.equals(10, v.value);
 
-		e.delete();
+		world.delete(e);
+
 		world.invalidate();
 
 		Assert.isNull(v.world);
@@ -32,17 +34,19 @@ class ComponentTest extends EcxTest {
 	}
 
 	public function testComponentDelete() {
-		var e = world.edit(world.create());
-		var v:Value = e.create(Value);
+		var e = world.create();
+		var value:Value = world.resolve(Value);
+		var v:ValueData = value.create(e);
 		Assert.notNull(v);
 
-		e.remove(Value);
+		value.remove(e);
+
 		Assert.isFalse(v.entity.isValid);
 		Assert.isNull(v.world);
 
-		var noValue = e.get(Value);
+		var noValue:ValueData = value.get(e);
 		Assert.isNull(noValue);
 
-		e.delete();
+		world.delete(e);
 	}
 }

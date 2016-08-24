@@ -15,10 +15,6 @@ import ecx.types.ComponentSpec;
 
 // TODO: check default constructor at compile-time
 
-#if !macro
-@:autoBuild(ecx.macro.TypeBuilder.build(0))
-#end
-@:base
 @:unreflective
 class Component {
 
@@ -37,32 +33,7 @@ class Component {
 	/** Callback when unlinked from entity **/
 	function onRemoved() {}
 
-	/** Lock linked entity for editing **/
-	inline public function edit():EntityView {
-		#if debug
-		if(world == null) throw "Component is not linked to any entity";
-		if(!entity.isValid) throw "Bad entity";
-		#end
-		return world.edit(entity);
-	}
-
-	inline public function toString():String {
-		return 'Component(Type: #${__getType().id}, Spec: #${__getSpec().id})';
-	}
-
 	function copyFrom(source:Component) {}
-
-	function __getType():ComponentType {
-		return ComponentType.INVALID;
-	}
-
-	function __getSpec():ComponentSpec {
-		return ComponentSpec.INVALID;
-	}
-
-	function _newInstance():Component {
-		return null;
-	}
 
 	inline function get_isActive():Bool {
 		return entity.isValid;

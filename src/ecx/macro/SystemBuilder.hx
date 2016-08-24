@@ -2,32 +2,38 @@ package ecx.macro;
 
 #if macro
 
-import ecx.types.TypeKind;
 import ecx.macro.MacroUtil;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
 @:final
-class TypeBuilder {
+class SystemBuilder {
 
-	public static function build(kind:TypeKind):Array<Field> {
+	public static function build():Array<Field> {
 		var cls:ClassType = Context.getLocalClass().get();
 		if(cls.isExtern) {
 			cls.exclude();
 			return null;
 		}
 
-		TypeMacroDebug.begin();
-		TypeMacroGenerate.invoke();
-
-		var pos = Context.currentPos();
-		if(kind == TypeKind.COMPONENT) {
-			cls.meta.add(":unreflective", [], pos);
+		trace("----- " + cls.name);
+		if(cls.meta.has(":generic")) {
+			trace("GENERIC: " + cls.name);
+			cls.meta.add(":autoBuild", [
+				macro ecx.macro.SystemBuilder.build(1)
+			], cls.pos);
+//			//var t = Context.getType(cls.name);
+//			return null;
 		}
 
-		var typeInfo = getTypeInfo(kind, cls);
-		var typeKind = Context.makeExpr(kind, pos);
+		MacroBuildDebug.begin();
+		MacroBuildGenerate.invoke();
+
+		var pos = Context.currentPos();
+		var fields:Array<Field> = Context.getBuildFields();
+
+		var typeInfo = getTypeInfo(cls);
 		var typeBasePath = Context.makeExpr(typeInfo.basePath, pos);
 		var typePath = Context.makeExpr(typeInfo.path, pos);
 		var typeId = Context.makeExpr(typeInfo.typeId, pos);
@@ -40,52 +46,56 @@ class TypeBuilder {
 		};
 		var componentType:ComplexType = ComplexType.TPath(tp);
 
-		var tpType = getTypePathForType(kind, false);
-		var tpSpec = getTypePathForType(kind, true);
+		var tpType = getTypePathForType(false);
+		var tpSpec = getTypePathForType(true);
 
-		TypeMacroDebug.print(typeInfo);
+		MacroBuildDebug.printSystem(typeInfo);
 
-		var fields:Array<Field> = Context.getBuildFields();
+
 		var fieldsExpr = macro {
-			var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
-			var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
 			function override_X__getType() { return new $tpType($typeId); }
 			function override_X__getSpec() { return new $tpSpec($specId); }
 		}
-		var idFields = FieldsBuilder.build(fieldsExpr);
-		fields = fields.concat(idFields);
+		FieldsBuilder.push(fields, fieldsExpr);
 
-		var hasConstructor:Bool = false;
-		for(field in fields) {
-			if(field.name == "new") {
-				hasConstructor = true;
+		if(!cls.meta.has(":generic")) {
+			var staticTypesExpr = macro {
+				var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
+				var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
 			}
+			FieldsBuilder.push(fields, staticTypesExpr);
 		}
 
-		if(kind == TypeKind.COMPONENT && hasConstructor) {
-			var cloneExpr = macro {
-				function override_Xpublic_X_newInstance():ecx.Component {
-					return new $tp();
+		var compData = getComponentType(cls);
+		if(compData != null) {
+			MacroBuildDebug.printComponent(compData);
+			var compTypeId = Context.makeExpr(compData.typeId, pos);
+			var compExprs = macro {
+				function override_X__componentType() { return new ecx.types.ComponentType($compTypeId); }
+			}
+			FieldsBuilder.push(fields, compExprs);
+
+			if(!cls.meta.has(":generic")) {
+				var staticCompExprs = macro {
+					var public_Xstatic_Xinline_X__COMPONENT_TYPE = new ecx.types.ComponentType($compTypeId);
 				}
+				FieldsBuilder.push(fields, staticCompExprs);
 			}
-			fields = fields.concat(FieldsBuilder.build(cloneExpr));
 		}
 
-		if(kind == TypeKind.SYSTEM) {
-			var injExprs:Array<Expr> = [];
-			addConfigurator(cls, fields, injExprs);
-			addInjectors(fields, injExprs);
-			fields = makeInjectMethod(fields, injExprs);
-			patchUnreflective(fields);
-		}
+		var injExprs:Array<Expr> = [];
+		addConfigurator(cls, fields, injExprs);
+		addInjectors(fields, injExprs);
+		makeInjectMethod(fields, injExprs);
+		patchUnreflective(fields);
 
-		TypeMacroDebug.end();
+		MacroBuildDebug.end();
 
 		return fields;
 	}
 
-	static function getTypePathForType(kind:TypeKind, spec:Bool) {
-		var name = (kind == TypeKind.COMPONENT ? "Component" : "System") + (spec ? "Spec" : "Type");
+	static function getTypePathForType(spec:Bool) {
+		var name = "System" + (spec ? "Spec" : "Type");
 		return { pack: ["ecx", "types"], name: name, params: [], sub: null };
 	}
 
@@ -216,40 +226,64 @@ class TypeBuilder {
 		}
 	}
 
-	static function makeInjectMethod(fields:Array<Field>, exprs:Array<Expr>):Array<Field> {
-		if(exprs.length > 0) {
-			var injExpr = macro {
-				function override_X_inject() {
-					var __world:ecx.World = this.world;
-					$b{exprs}
-				}
-			}
-			var injFields = FieldsBuilder.build(injExpr);
-			fields = fields.concat(injFields);
+	static function makeInjectMethod(fields:Array<Field>, exprs:Array<Expr>) {
+		if(exprs.length == 0) {
+			return;
 		}
-		return fields;
+		var injExpr = macro {
+			function override_X_inject() {
+				var __world:ecx.World = this.world;
+				$b{exprs}
+			}
+		}
+		FieldsBuilder.push(fields, injExpr);
 	}
 
-	static function getTypeInfo(kind:TypeKind, cl:ClassType):TypeMacroData {
-		var baseClass = cl;
+	static function getTypeInfo(classType:ClassType):MacroSystemData {
+		var baseClass = classType;
 		// Traverse up to the last non-component base
-		while(!extendsBaseType(baseClass)) {
+		while(!MacroUtil.extendsBaseMeta(baseClass)) {
 			baseClass = baseClass.superClass.t.get();
 		}
 
 		// Look up the ID, otherwise generate one
-		var fullName:String = MacroUtil.getFullNameFromBaseType(cl);
-		var baseFullName:String = MacroUtil.getFullNameFromBaseType(baseClass);
+		var fullName = MacroUtil.getFullNameFromBaseType(classType);
+		var baseFullName = MacroUtil.getFullNameFromBaseType(baseClass);
 
-		var typeData = TypeMacroCache.getType(kind, fullName);
+		var typeData = MacroSystemCache.get(fullName);
 		if(typeData != null) {
 			return typeData;
 		}
 
-		var baseTypeId = TypeMacroCache.getBaseTypeId(kind, fullName, baseFullName);
-		typeData = new TypeMacroData(kind, baseFullName, fullName, baseTypeId);
-		TypeMacroCache.set(typeData);
+		var baseTypeId = MacroSystemCache.getBaseTypeId(fullName, baseFullName);
+		typeData = new MacroSystemData(baseFullName, fullName, baseTypeId);
+		MacroSystemCache.set(typeData);
 		return typeData;
+	}
+
+	static function getComponentType(classType:ClassType):MacroComponentData {
+		var baseClass = classType;
+		if(classType.meta.has(":components")) {
+			return null;
+		}
+		// Traverse up to the last non-component base
+		while(baseClass.superClass != null) {
+			baseClass = baseClass.superClass.t.get();
+			if(baseClass.meta.has(":components")) {
+				// Look up the ID, otherwise generate one
+				var fullName = MacroUtil.getFullNameFromBaseType(classType);
+				var compData = MacroComponentCache.get(fullName);
+				if(compData != null) {
+					return compData;
+				}
+				compData = new MacroComponentData(fullName);
+				MacroComponentCache.set(compData);
+				return compData;
+			}
+		}
+
+		return null;
+
 	}
 
 	static function extendsBaseType(classType:ClassType) {

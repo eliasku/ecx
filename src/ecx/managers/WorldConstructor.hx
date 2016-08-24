@@ -1,5 +1,7 @@
 package ecx.managers;
 
+import ecx.storage.ComponentArray;
+import ecx.types.SystemFlags;
 import ecx.types.ComponentTable;
 import ecx.types.ComponentTableData;
 import ecx.types.ComponentType;
@@ -30,7 +32,7 @@ class WorldConstructor {
 
 	static function construct(world:World, capacity:Int, config:WorldConfig) {
 		world.capacity = nextPowerOfTwo(capacity);
-		createComponentsData(world);
+		createComponentsData(config, world);
 		createEntityManager(world);
 		createSystemLookup(world, config);
 		createSystemsOrder(world, config);
@@ -40,16 +42,26 @@ class WorldConstructor {
 		deleteConfigurators(world);
 	}
 
-	static function createComponentsData(world:World) {
+	static function createComponentsData(config:WorldConfig, world:World) {
+		var storages = [];
+		var maxType = 0;
+		for(system in config._systems) {
+			var storage:ComponentArray = Std.instance(system, ComponentArray);
+			if(storage != null) {
+				storages.push(storage);
+				var typeId = @:privateAccess storage.__componentType().id;
+				if(typeId > maxType) {
+					maxType = typeId;
+				}
+			}
+		}
+
 		var capacity = world.capacity;
-		var typesCount = world.engine.getComponentTypesCount();
-		var types = world.engine._types;
+		var typesCount = maxType + 1;
 
 		var components = new ComponentTableData(typesCount);
-		for(typeId in 0...typesCount) {
-			var componentType = new ComponentType(typeId);
-			var qualifiedClassName = types.getTypeInfoByComponentType(componentType).basePath;
-			components[typeId] = ComponentTable.createArrayData(qualifiedClassName, capacity);
+		for(storage in storages) {
+			components[@:privateAccess storage.__componentType().id] = storage;
 		}
 
 		world.components = components;
@@ -108,6 +120,12 @@ class WorldConstructor {
 
 		for(system in world._orderedSystems) {
 			system.world = world;
+
+			var ca = Std.instance(system, ComponentArray);
+			if(ca != null) {
+				ca.allocate();
+			}
+
 			system._inject();
 			if(system._isProcessor()) {
 				processors.push(system);

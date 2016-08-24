@@ -1,6 +1,11 @@
 package ecx.components;
 
-class Value extends Component {
+import ecx.storage.AutoComp;
+import ecx.storage.ComponentArray;
+
+class Value extends ComponentArray implements AutoComp<ValueData> {}
+
+class ValueData extends Component {
 
 	var _value:Int = 0;
 
@@ -16,3 +21,4 @@ class Value extends Component {
 		return _value = value;
 	}
 }
+

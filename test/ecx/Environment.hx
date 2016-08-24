@@ -1,5 +1,8 @@
 package ecx;
 
+import ecx.components.Value;
+import ecx.components.TestPosition;
+
 class Environment {
 	static var _current:Environment;
 
@@ -15,6 +18,9 @@ class Environment {
 	public function new() {
 		var config = new WorldConfig();
 		config.add(new EmptySystem());
+
+		config.add(new Value());
+		config.add(new TestPosition());
 		world = Engine.initialize().createWorld(config, 1000);
 	}
 }

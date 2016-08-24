@@ -38,12 +38,12 @@ class Engine {
 		return world;
 	}
 
-	inline public function typeInfo<T>(typeClass:Class<T>):Null<TypeInfo> {
-		return _types.lookup.get(Type.getClassName(typeClass));
-	}
+//	inline public function typeInfo<T>(typeClass:Class<T>):Null<TypeInfo> {
+//		return _types.lookup.get(Type.getClassName(typeClass));
+//	}
 
 	inline public function getComponentTypesCount():Int {
-		return _types.componentsNextTypeId;
+		return _types.componentsTotal;
 	}
 
 	inline public function getWorld(index:Int):World {

@@ -35,7 +35,7 @@ class FamilyData {
     function check(entity:Entity) {
         var rc = _requiredComponents;
         for(i in 0...rc.length) {
-            if(rc[i][entity.id] == null) {
+            if(!rc[i].has(entity)) {
                 return false;
             }
         }

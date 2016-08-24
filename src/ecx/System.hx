@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.storage.ComponentArray;
 import ecx.ds.CVector;
 import ecx.types.FamilyData;
 import ecx.types.SystemFlags;
@@ -22,7 +23,7 @@ using ecx.macro.ClassMacroTools;
 	@see ecx.Family
 **/
 #if !macro
-@:autoBuild(ecx.macro.TypeBuilder.build(1))
+@:autoBuild(ecx.macro.SystemBuilder.build())
 #end
 @:base
 @:access(ecx.FamilyData)
@@ -71,7 +72,7 @@ class System {
 		}
 	}
 
-	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<CVector<Entity>> {
+	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<ComponentArray>>>):ExprOf<CVector<Entity>> {
 		var componentTypeList = requiredComponents.componentTypeList();
 		return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypeList));
 	}

@@ -1,6 +1,6 @@
 package ecx;
 
-import ecx.types.ComponentsArrayData;
+import ecx.storage.ComponentArray;
 import ecx.types.ComponentTableData;
 import ecx.ds.CArrayIterator;
 import ecx.ds.CInt32RingBuffer;
@@ -93,14 +93,7 @@ class World {
 		var entity = create();
 		var componentsByType = components;
 		for(typeId in 0...componentsByType.length) {
-			var component:Component = componentsByType[typeId][source.id];
-			if(component != null) {
-				var cloned = component._newInstance();
-				addComponent(entity, cloned, new ComponentType(typeId));
-
-				// TODO: check if we could do copy before adding
-				cloned.copyFrom(component);
-			}
+			componentsByType[typeId].copy(source, entity);
 		}
 		return entity;
 	}
@@ -146,12 +139,12 @@ class World {
 		_internal_entityChanged(entity);
 	}
 
-	inline public function edit(entity:Entity):EntityView {
-		return new EntityView(_mapToData[entity.id]);
-	}
+//	inline public function edit(entity:Entity):EntityView {
+//		return new EntityView(_mapToData[entity.id]);
+//	}
 
-	macro public function mapTo<T:Component>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<MapTo<T>> {
-		return macro new ecx.MapTo($componentClass, cast $self.components[$componentClass.__TYPE.id]);
+	macro public function componentArray<T:ComponentArray>(self:ExprOf<World>, componentArrayClass:ExprOf<Class<T>>):ExprOf<T> {
+		return macro cast @:privateAccess $self._lookup[$componentArrayClass.__TYPE.id];
 	}
 
 	inline public function isActive(entity:Entity):Bool {
@@ -166,73 +159,40 @@ class World {
 		return 'World #$id';
 	}
 
-	@:nonVirtual @:unreflective
-	public function addComponent<T:Component>(entity:Entity, component:T, type:ComponentType):T {
-		// workaround for haxe < 3.3: cpp generation (avoid dynamic_cast<>)
-		var comp:Component = component;
-		components[type.id][entity.id] = comp;
-		var active = isActive(entity);
-		#if debug
-		comp.checkComponentBeforeLink(entity, this);
-		#end
-		comp.entity = entity;
-		comp.world = this;
-		comp.onAdded();
-		if(active) {
-			_internal_entityChanged(entity);
-		}
-		return component;
-	}
+//	@:nonVirtual @:unreflective
+//	public function addComponent<T:Component>(entity:Entity, component:T, type:ComponentType):T {
+//		// workaround for haxe < 3.3: cpp generation (avoid dynamic_cast<>)
+//		var comp:Component = component;
+//		components[type.id].set(entity, comp);
+//		if(isActive(entity)) {
+//			_internal_entityChanged(entity);
+//		}
+//		return component;
+//	}
 
-	@:nonVirtual @:unreflective @:extern
-	inline public function getComponent<T:Component>(entity:Entity, type:ComponentType, componentClass:Class<T>):T {
-		return Cast.unsafe(components[type.id][entity.id], componentClass);
-	}
+//	@:nonVirtual @:unreflective @:extern
+//	inline public function getComponent<T:Component>(entity:Entity, type:ComponentType, componentClass:Class<T>):T {
+//		return Cast.unsafe(components[type.id].get(entity), componentClass);
+//	}
 
 	inline public function hasComponent(entity:Entity, type:ComponentType):Bool {
-		return components[type.id][entity.id] != null;
+		return components[type.id].has(entity);
 	}
 
 	public function removeComponent(entity:Entity, type:ComponentType) {
-		var entityToComponent:ComponentsArrayData = components[type.id];
-		var component:Component = entityToComponent[entity.id];
-
-		if(component != null) {
-			#if debug
-			component.checkComponentBeforeUnlink();
-			#end
-			var active = isActive(entity);
-			component.onRemoved();
-			if(active) {
-				_internal_entityChanged(entity);
-			}
-			component.entity = Entity.INVALID;
-			component.world = null;
-			entityToComponent[entity.id] = null;
+		var entityToComponent:ComponentArray = components[type.id];
+		entityToComponent.remove(entity);
+		if(isActive(entity)) {
+			_internal_entityChanged(entity);
 		}
 	}
 
 	public function clearComponents(entity:Entity) {
 		var componentsData = components;
-		var active = isActive(entity);
 		for(typeId in 0...componentsData.length) {
-			var component:Component = componentsData[typeId][entity.id];
-			if(component != null) {
-				#if debug
-				component.checkComponentBeforeUnlink();
-				#end
-
-				component.onRemoved();
-				if(active) {
-				}
-				component.entity = Entity.INVALID;
-				component.world = null;
-
-				componentsData[typeId][entity.id] = null;
-			}
+			componentsData[typeId].remove(entity);
 		}
-
-		if(active) {
+		if(isActive(entity)) {
 			_internal_entityChanged(entity);
 		}
 	}
