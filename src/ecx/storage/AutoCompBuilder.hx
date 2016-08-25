@@ -1,6 +1,5 @@
 package ecx.storage;
 
-import ecx.macro.FieldsBuilder;
 import haxe.macro.Type;
 import haxe.macro.Context;
 import haxe.macro.Expr;
@@ -13,12 +12,13 @@ class AutoCompBuilder {
 		var pos = Context.currentPos();
 		var fields = Context.getBuildFields();
 		var localClass:ClassType = Context.getLocalClass().get();
-		var dataType:Type;
-		for (impl in localClass.interfaces) {
-			if (impl.t.get().name == "AutoComp") {
-				dataType = impl.params[0];
-				break;
-			}
+		localClass.meta.add(":final", [], pos);
+
+		var dataType:Type = localClass.superClass.params[0];
+		var dataFields = switch(dataType) {
+			case TInst(x, _):
+				x.get().fields.get();
+			case _: throw "Error";
 		}
 
 		var ctData = Context.toComplexType(dataType);
@@ -27,13 +27,33 @@ class AutoCompBuilder {
 			default: throw "bad generic param type";
 		}
 
+		var hasCopyFrom = false;
+		for(dataField in dataFields) {
+			if(dataField.name == "copyFrom") {
+				hasCopyFrom = true;
+				break;
+			}
+		}
+		if(hasCopyFrom) {
+			var copy = macro class Copy {
+				inline override public function copy(source:ecx.Entity, destination:Entity) {
+					var data = get(source);
+					if(data != null) {
+						create(destination).copyFrom(data);
+					}
+				}
+			}
+
+			fields = fields.concat(copy.fields);
+		}
+
 		var fs = macro class TempClass {
 
 			public var data(default, null):ecx.ds.CArray<$ctData>;
 
 	inline public function new() {}
 
-	override function allocate() {
+	override function __allocate() {
 		data = new ecx.ds.CArray<$ctData>(world.capacity);
 	}
 
@@ -43,12 +63,6 @@ class AutoCompBuilder {
 
 	inline public function set(entity:ecx.Entity, component:$ctData) {
 		data[entity.id] = component;
-//				#if debug
-//				component.checkComponentBeforeLink(entity, world);
-//				#end
-		@:privateAccess component.entity = entity;
-		@:privateAccess component.world = world;
-		@:privateAccess component.onAdded();
 	}
 
 	inline public function create(entity:ecx.Entity):$ctData {
@@ -58,26 +72,17 @@ class AutoCompBuilder {
 	}
 
 	inline override public function remove(entity:ecx.Entity) {
-		var component:$ctData = data[entity.id];
-//				#if debug
-//				component.checkComponentBeforeUnlink();
-//				#end
-		if (component != null) {
-			@:privateAccess component.onRemoved();
-			@:privateAccess component.entity = ecx.Entity.INVALID;
-			@:privateAccess component.world = null;
-			data[entity.id] = null;
-		}
+		data[entity.id] = null;
 	}
 
-	override public function copy(source:ecx.Entity, destination:ecx.Entity) {
-		var component:ecx.Component = data[source.id];
-		if (component != null) {
-			var cloned = @:privateAccess new $tpData();
-			set(destination, cloned);
-			@:privateAccess cloned.copyFrom(component);
-		}
-	}
+//	override public function copy(source:ecx.Entity, destination:ecx.Entity) {
+//		var component:ecx.Component = data[source.id];
+//		if (component != null) {
+//			var cloned = @:privateAccess new $tpData();
+//			set(destination, cloned);
+//			@:privateAccess cloned.copyFrom(component);
+//		}
+//	}
 
 	inline override public function has(entity:ecx.Entity):Bool {
 		return data[entity.id] != null;

@@ -1,7 +1,6 @@
 package ecx;
 
-import ecx.storage.ComponentArray;
-import ecx.types.ComponentTableData;
+import ecx.types.ComponentTable;
 import ecx.ds.CArrayIterator;
 import ecx.ds.CInt32RingBuffer;
 import ecx.managers.WorldConstructor;
@@ -14,16 +13,16 @@ import ecx.ds.CBitArray;
 import ecx.macro.ClassMacroTools;
 import haxe.macro.Expr.ExprOf;
 
-#if debug
+#if ecx_debug
 using ecx.managers.WorldDebug;
 #end
 
 @:final @:dce @:unreflective
-@:access(ecx.System, ecx.EntityView, ecx.Component, ecx.Family, ecx.Entity)
+@:access(ecx.System, ecx.Family, ecx.Entity)
 class World {
 
 	// Mapping: (type, entity) => component
-	public var components(default, null):ComponentTableData;
+	public var components(default, null):ComponentTable;
 
 	// Identifier of this world
 	public var id(default, null):Int;
@@ -37,11 +36,14 @@ class World {
 	public var engine(default, null):Engine;
 
 	// lookup for all systems
-	var _lookup:CArray<System>;
+	var _services:CArray<Service>;
+
 	// all systems sorted by priority
-	var _orderedSystems:CArray<System>;
+	var _orderedServices:CArray<Service>;
+
 	// only active systems (not idle)
 	var _systems:CArray<System>;
+
 	// systems with families
 	var _processors:CArray<System>;
 
@@ -67,11 +69,11 @@ class World {
 		WorldConstructor.construct(this, capacity, config);
 	}
 
-	macro public function resolve<T:System>(self:ExprOf<World>, systemClass:ExprOf<Class<T>>):ExprOf<T> {
-		var systemType = ClassMacroTools.systemType(systemClass);
+	macro public function resolve<T:Service>(self:ExprOf<World>, serviceClass:ExprOf<Class<T>>):ExprOf<T> {
+		var serviceType = ClassMacroTools.serviceType(serviceClass);
 		return macro {
-			var tmp = @:privateAccess $self._lookup[$systemType.id];
-			ecx.ds.Cast.unsafe(tmp, $systemClass);
+			var tmp = @:privateAccess $self._services[$serviceType.id];
+			ecx.ds.Cast.unsafe(tmp, $serviceClass);
 		}
 	}
 
@@ -99,7 +101,7 @@ class World {
 	}
 
 	public function delete(entity:Entity) {
-		#if debug
+		#if ecx_debug
 		guardEntity(entity);
 		#end
 		if(_removedFlags.enableIfNot(entity.id)) {
@@ -108,21 +110,21 @@ class World {
 	}
 
 	public function invalidate() {
-		#if debug
+		#if ecx_debug
 		lockFamilies();
 		#end
 
 		deleteEntities(_removeList);
 		changeEntities(_changeList);
 
-		#if debug
+		#if ecx_debug
 		guardFamilies();
 		unlockFamilies();
 		#end
 	}
 
 	public function activate(entity:Entity) {
-		#if debug
+		#if ecx_debug
 		guardEntity(entity);
 		if(_activeFlags.get(entity.id)) throw 'This entity is already active';
 		#end
@@ -131,7 +133,7 @@ class World {
 	}
 
 	public function deactivate(entity:Entity) {
-		#if debug
+		#if ecx_debug
 		guardEntity(entity);
 		if(!_activeFlags.get(entity.id)) throw "This entity is already inactive";
 		#end
@@ -139,12 +141,8 @@ class World {
 		_internal_entityChanged(entity);
 	}
 
-//	inline public function edit(entity:Entity):EntityView {
-//		return new EntityView(_mapToData[entity.id]);
-//	}
-
-	macro public function componentArray<T:ComponentArray>(self:ExprOf<World>, componentArrayClass:ExprOf<Class<T>>):ExprOf<T> {
-		return macro cast @:privateAccess $self._lookup[$componentArrayClass.__TYPE.id];
+	macro public function componentArray<T:(Component, Service)>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<T> {
+		return macro cast @:privateAccess $self._services[componentClass.__TYPE.id];
 	}
 
 	inline public function isActive(entity:Entity):Bool {
@@ -159,28 +157,12 @@ class World {
 		return 'World #$id';
 	}
 
-//	@:nonVirtual @:unreflective
-//	public function addComponent<T:Component>(entity:Entity, component:T, type:ComponentType):T {
-//		// workaround for haxe < 3.3: cpp generation (avoid dynamic_cast<>)
-//		var comp:Component = component;
-//		components[type.id].set(entity, comp);
-//		if(isActive(entity)) {
-//			_internal_entityChanged(entity);
-//		}
-//		return component;
-//	}
-
-//	@:nonVirtual @:unreflective @:extern
-//	inline public function getComponent<T:Component>(entity:Entity, type:ComponentType, componentClass:Class<T>):T {
-//		return Cast.unsafe(components[type.id].get(entity), componentClass);
-//	}
-
 	inline public function hasComponent(entity:Entity, type:ComponentType):Bool {
 		return components[type.id].has(entity);
 	}
 
 	public function removeComponent(entity:Entity, type:ComponentType) {
-		var entityToComponent:ComponentArray = components[type.id];
+		var entityToComponent:Component = components[type.id];
 		entityToComponent.remove(entity);
 		if(isActive(entity)) {
 			_internal_entityChanged(entity);
@@ -203,18 +185,13 @@ class World {
 		}
 	}
 
-	/** Iterator for *alive* entities **/
-//	inline public function entities():WorldEntitiesIterator {
-//		return new WorldEntitiesIterator(_pool);
-//	}
-
 	/** Iterator for *active* systems ordered by priority **/
 	inline public function systems():CArrayIterator<System> {
 		return new CArrayIterator<System>(_systems);
 	}
 
 	function allocNextEntity():Entity {
-		#if debug
+		#if ecx_debug
 		if(used >= capacity) throw 'Out of entities, max allowed $capacity';
 		#end
 
@@ -255,7 +232,7 @@ class World {
 		var count = entities.length;
 		if(count > 0) {
 			used -= count;
-			#if debug
+			#if ecx_debug
 			if(used < 0) throw "No way!";
 			#end
 			//if(startLength != removeList.length) throw "removing while removing";
@@ -284,7 +261,7 @@ class World {
 				changedFlags.disable(entity.id);
 				++i;
 			}
-			#if debug
+			#if ecx_debug
 			if(startLength != entities.length) throw "update while updating";
 			#end
 			entities.splice(0, end);
@@ -292,7 +269,7 @@ class World {
 	}
 
 	function _internal_entityChanged(entity:Entity) {
-		#if debug
+		#if ecx_debug
 		guardEntity(entity);
 		#end
 		if(_changedFlags.enableIfNot(entity.id)) {

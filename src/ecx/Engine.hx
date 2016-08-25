@@ -1,6 +1,5 @@
 package ecx;
 
-import ecx.types.TypeInfo;
 import ecx.types.TypeManager;
 
 /**

@@ -1,11 +1,10 @@
 package ecx.components;
 
 import ecx.storage.AutoComp;
-import ecx.storage.ComponentArray;
 
-class Value extends ComponentArray implements AutoComp<ValueData> {}
+class Value extends AutoComp<ValueData> {}
 
-class ValueData extends Component {
+class ValueData {
 
 	var _value:Int = 0;
 
@@ -19,6 +18,10 @@ class ValueData extends Component {
 
 	function set_value(value:Int):Int {
 		return _value = value;
+	}
+
+	public function copyFrom(data:ValueData) {
+		_value = data._value;
 	}
 }
 

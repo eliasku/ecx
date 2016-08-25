@@ -1,6 +1,6 @@
 package ecx.managers;
 
-#if debug
+#if ecx_debug
 
 class WorldDebug {
 
@@ -34,17 +34,6 @@ class WorldDebug {
 		for(i in 0...world._families.length) {
 			world._families.get(i).debugUnlock();
 		}
-	}
-
-	public static function checkComponentBeforeLink(component:Component, entity:Entity, world:World) {
-		if(world == null) throw "bad world for linking";
-		if(component.entity.isValid) throw "already linked to entity";
-		if(!entity.isValid) throw "bad entity for linking";
-	}
-
-	public static function checkComponentBeforeUnlink(component:Component) {
-		if(component.world == null) throw "already not linked to entity";
-		if(!component.entity.isValid) throw "linked, but has bad entity";
 	}
 }
 

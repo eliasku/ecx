@@ -46,10 +46,6 @@ class MovementSystem extends System {
 }
 ```
 
-### EntityView
-
-EntityView is the utility class. It provides shortcut to edit entity using object-wrapper.
-
 ### System Flags
 
 * `IDLE`: System doesn't override `update` method. Should not be updated.

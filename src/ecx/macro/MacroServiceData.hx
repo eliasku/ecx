@@ -3,7 +3,7 @@ package ecx.macro;
 #if macro
 
 @:final
-class MacroSystemData {
+class MacroServiceData {
 
     static var NEXT_TYPE_ID:Int = 0;
     static var NEXT_SPEC_ID:Int = 0;

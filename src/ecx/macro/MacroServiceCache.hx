@@ -3,11 +3,11 @@ package ecx.macro;
 #if macro
 
 @:final
-class MacroSystemCache {
+class MacroServiceCache {
 
-    public static var cache(default, null):Map<String, MacroSystemData> = new Map();
+    public static var cache(default, null):Map<String, MacroServiceData> = new Map();
 
-    public static function get(path:String):Null<MacroSystemData> {
+    public static function get(path:String):Null<MacroServiceData> {
         return cache.get(path);
     }
 
@@ -22,7 +22,7 @@ class MacroSystemCache {
         return baseTypeData.typeId;
     }
 
-    public static function set(data:MacroSystemData) {
+    public static function set(data:MacroServiceData) {
         cache.set(data.path, data);
     }
 }

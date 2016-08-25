@@ -1,11 +1,8 @@
 package ecx;
 
-import ecx.storage.ComponentArray;
 import ecx.ds.CVector;
 import ecx.types.FamilyData;
 import ecx.types.SystemFlags;
-import ecx.types.SystemSpec;
-import ecx.types.SystemType;
 import haxe.macro.Expr;
 
 using ecx.macro.ClassMacroTools;
@@ -22,27 +19,19 @@ using ecx.macro.ClassMacroTools;
 	@see ecx.Wire
 	@see ecx.Family
 **/
+
 #if !macro
 @:autoBuild(ecx.macro.SystemBuilder.build())
 #end
 @:base
 @:access(ecx.FamilyData)
-class System {
-
-	/**
-		World context
-	**/
-	@:unreflective
-	public var world(default, null):World;
+class System extends Service {
 
 	@:unreflective
 	var _flags:SystemFlags = new SystemFlags();
 
 	@:unreflective
 	var _families:Array<FamilyData>;
-
-	//@:unreflective
-	function initialize() {}
 
 	@:unreflective
 	function update() {}
@@ -53,35 +42,17 @@ class System {
 	//@:unreflective
 	function onEntityRemoved(entity:Entity, family:FamilyData) {}
 
-	function _inject() {}
-
-	//@:unreflective
-	function __getType():SystemType {
-		return SystemType.INVALID;
+	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<CVector<Entity>> {
+		var componentTypes = requiredComponents.componentTypeList();
+		return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypes));
 	}
 
-	//@:unreflective
-	function __getSpec():SystemSpec {
-		return SystemSpec.INVALID;
-	}
-
-	@:nonVirtual @:unreflective
-	function _internal_entityChanged(entity:Entity, enabled:Bool) {
-		for(family in _families) {
-			@:privateAccess family._internal_entityChanged(entity, enabled);
-		}
-	}
-
-	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<ComponentArray>>>):ExprOf<CVector<Entity>> {
-		var componentTypeList = requiredComponents.componentTypeList();
-		return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypeList));
-	}
+	function __configure() {}
 
 	@:nonVirtual @:unreflective
 	function _addFamily(family:FamilyData):CVector<Entity> {
 		if(_families == null) {
 			_families = [];
-			_flags = _flags.add(SystemFlags.PROCESSOR);
 		}
 		_families.push(family);
 		return family.entities;
@@ -92,12 +63,7 @@ class System {
 		return _flags.has(SystemFlags.IDLE);
 	}
 
-	@:nonVirtual @:unreflective @:extern
-	inline function _isProcessor():Bool {
-		return _flags.has(SystemFlags.PROCESSOR);
-	}
-
 	inline function toString():String {
-		return 'System(Type: #${__getType().id}, Spec: #${__getSpec().id})';
+		return 'System(Type: #${__serviceType().id}, Spec: #${__serviceSpec().id})';
 	}
 }

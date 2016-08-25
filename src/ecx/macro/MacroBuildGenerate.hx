@@ -22,7 +22,7 @@ class MacroBuildGenerate {
         var metaAccess:MetaAccess = EnumTools.extract(type, Type.TInst(cl, _) => cl.get().meta);
 
         var exprs = [];
-        for(systemData in MacroSystemCache.cache) {
+        for(systemData in MacroServiceCache.cache) {
             exprs.push(macro $v{systemData.path});
             exprs.push(macro $v{systemData.basePath});
             exprs.push(macro $v{systemData.typeId});

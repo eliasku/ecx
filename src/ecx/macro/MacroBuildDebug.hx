@@ -15,8 +15,8 @@ class MacroBuildDebug {
         --_depth;
     }
 
-    public static function printSystem(data:MacroSystemData) {
-        #if debug
+    public static function printSystem(data:MacroServiceData) {
+        #if ecx_debug
         var prefix = indent("-", _depth - 1) + ">";
         var base = data.isBase ? "" : ' : ${data.basePath}';
         var kind = "(S)";
@@ -25,7 +25,7 @@ class MacroBuildDebug {
     }
 
     public static function printComponent(data:MacroComponentData) {
-        #if debug
+        #if ecx_debug
         var prefix = indent("-", _depth - 1) + ">";
         var kind = "[C]";
         trace('$prefix $kind #${data.typeId} ${data.path}');
