@@ -5,6 +5,8 @@ import ecx.ds.CInt32Array;
 @:final @:unreflective @:dce
 class EntityMultiSet {
 
+	inline static var TO_REMOVE:Int = 0x15F0DEAD;
+
 	public var length(default, null):Int = 0;
 	public var buffer(default, null):CInt32Array;
 	public var changed(default, null):Bool = false;
@@ -13,7 +15,8 @@ class EntityMultiSet {
 		buffer = new CInt32Array(16);
 	}
 
-	inline public function has(entity:Entity):Bool {
+	// just for debug
+	public function has(entity:Entity):Bool {
 		// TODO: mod bin search
 		for(i in 0...length) {
 			if(buffer[i] == entity.id) {
@@ -41,7 +44,7 @@ class EntityMultiSet {
 		// TODO: mod bin search
 		for (i in 0...length) {
 			if (buffer[i] == entity.id) {
-				buffer[i] = 0xDEADBABE;
+				buffer[i] = TO_REMOVE;
 				changed = true;
 				return;
 			}
@@ -60,7 +63,7 @@ class EntityMultiSet {
 		}
 
 		var c = length - 1;
-		while(c >= 0 && buffer[c] == 0xDEADBABE) {
+		while(c >= 0 && buffer[c] == TO_REMOVE) {
 			--c;
 		}
 		length = c + 1;
@@ -69,6 +72,7 @@ class EntityMultiSet {
 
 	inline public function reset() {
 		length = 0;
+		changed = false;
 	}
 
 	inline public function iterator():EntityMultiSetIterator {

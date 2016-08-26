@@ -27,11 +27,17 @@ class AutoCompBuilder {
 			default: throw "bad generic param type";
 		}
 
+		var hasContructor = false;
+		for(f in fields) {
+			if(f.name == "new") {
+				hasContructor = true;
+			}
+		}
+
 		var hasCopyFrom = false;
 		for(dataField in dataFields) {
 			if(dataField.name == "copyFrom") {
 				hasCopyFrom = true;
-				break;
 			}
 		}
 		if(hasCopyFrom) {
@@ -47,25 +53,30 @@ class AutoCompBuilder {
 			fields = fields.concat(copy.fields);
 		}
 
+		if(!hasContructor) {
+			var ctr = macro class New {
+				inline public function new() {}
+			}
+			fields = fields.concat(ctr.fields);
+		}
+
 		var fs = macro class TempClass {
 
 			public var data(default, null):ecx.ds.CArray<$ctData>;
-
-	inline public function new() {}
 
 	override function __allocate() {
 		data = new ecx.ds.CArray<$ctData>(world.capacity);
 	}
 
-	inline public function get(entity:ecx.Entity):$ctData {
+	inline override public function get(entity:ecx.Entity):$ctData {
 		return (data[entity.id]:$ctData);
 	}
 
-	inline public function set(entity:ecx.Entity, component:$ctData) {
+	inline override public function set(entity:ecx.Entity, component:$ctData) {
 		data[entity.id] = component;
 	}
 
-	inline public function create(entity:ecx.Entity):$ctData {
+	inline override public function create(entity:ecx.Entity):$ctData {
 		var component = new $tpData();
 		set(entity, component);
 		return component;

@@ -1,7 +1,6 @@
 package ecx.storage;
 
 import ecx.types.ComponentType;
-import ecx.ds.CArray;
 
 #if !macro
 @:autoBuild(ecx.storage.AutoCompBuilder.build())
@@ -9,15 +8,18 @@ import ecx.ds.CArray;
 @:base
 class AutoComp<T> extends Service implements Component {
 
+	public function get(entity:Entity):T {
+		return null;
+	}
 
-//	var data(default, null):CArray<T>;
-//
-//	public function get(entity:Entity):T {
-//		return data[entity.id];
-//	}
+	public function set(entity:Entity, component:T) {}
+	public function create(entity:Entity):T {
+		return null;
+	}
 
-//	function set(entity:Entity, component:T):Void {}
-//	@:extern function create(entity:Entity):T;
+
+	// interface
+
 	public function remove(entity:Entity) {}
 	public function copy(source:Entity, destination:Entity) {}
 

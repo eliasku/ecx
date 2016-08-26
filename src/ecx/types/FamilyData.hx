@@ -44,6 +44,9 @@ class FamilyData {
     // TODO: check array of entities
     @:nonVirtual @:unreflective
     function _internal_entityChanged(entity:Entity, active:Bool) {
+        #if ecx_debug
+        if(_mutable == false) throw "IMMUTABLE";
+        #end
         var matched = active && check(entity);
         var contained = _containedBits.get(entity.id);
         if(matched && !contained) {
@@ -83,8 +86,11 @@ class FamilyData {
 
 #if ecx_debug
     var _debugEntitiesCopy:Array<Entity>;
+    var _mutable:Bool = false;
 
     public function debugLock() {
+        if(_mutable == true) throw 'imm1';
+        _mutable = true;
         if(_debugEntitiesCopy == null) return;
         if(_debugEntitiesCopy.length != entities.length) throw 'Family assert: entity list access violation';
         for(i in 0..._debugEntitiesCopy.length) {
@@ -94,6 +100,8 @@ class FamilyData {
     }
 
     public function debugUnlock() {
+        if(_mutable == false) throw 'imm2';
+        _mutable = false;
         // create immutable copy for checking
         _debugEntitiesCopy = [];
         for(e in entities) {

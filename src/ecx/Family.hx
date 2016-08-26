@@ -2,7 +2,7 @@ package ecx;
 
 #if idea
 
-typedef Family<Rest> = Array<Entity>;
+typedef Family<Rest> = ecx.types.EntityMultiSet;
 
 #else
 

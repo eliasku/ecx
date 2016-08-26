@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.types.EntityMultiSet;
 import ecx.types.ComponentTable;
 import ecx.ds.CArrayIterator;
 import ecx.ds.CInt32RingBuffer;
@@ -118,7 +119,7 @@ class World {
 			deleteEntities(_removeList);
 			changeEntities(_changeList);
 			for(family in _families) {
-				var entities = family.entities;
+				var entities:EntityMultiSet = family.entities;
 				if(entities.changed) {
 					entities.invalidate();
 				}
