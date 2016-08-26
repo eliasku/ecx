@@ -1,5 +1,7 @@
 /build/
+/bin/
 
 *.iml
 .idea/
 /out/
+make.n
