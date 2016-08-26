@@ -2,10 +2,8 @@ package ecx.macro;
 
 #if macro
 
-import ecx.types.TypeKind;
-
 @:final
-class TypeMacroDebug {
+class MacroBuildDebug {
 
     static var _depth:Int = 0;
 
@@ -17,12 +15,20 @@ class TypeMacroDebug {
         --_depth;
     }
 
-    public static function print(data:TypeMacroData) {
-        #if debug
+    public static function printSystem(data:MacroServiceData) {
+        #if ecx_debug
         var prefix = indent("-", _depth - 1) + ">";
-        var kind = data.kind == TypeKind.COMPONENT ? "(C)" : "[S]";
         var base = data.isBase ? "" : ' : ${data.basePath}';
+        var kind = "(S)";
         trace('$prefix $kind type-${data.typeId} spec-${data.specId} ${data.path}$base');
+        #end
+    }
+
+    public static function printComponent(data:MacroComponentData) {
+        #if ecx_debug
+        var prefix = indent("-", _depth - 1) + ">";
+        var kind = "[C]";
+        trace('$prefix $kind #${data.typeId} ${data.path}');
         #end
     }
 

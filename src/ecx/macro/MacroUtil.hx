@@ -3,7 +3,7 @@ package ecx.macro;
 #if macro
 
 import ecx.macro.EnumTools;
-import haxe.macro.Type.BaseType;
+import haxe.macro.Type;
 import haxe.macro.Expr;
 
 using ecx.macro.EnumTools;
@@ -11,11 +11,11 @@ using ecx.macro.EnumTools;
 @:final
 class MacroUtil {
 
-	public static function getFullNameFromBaseType(baseType:BaseType) {
+	public static function getFullNameFromBaseType(baseType:BaseType):String {
 		return baseType.pack.concat([baseType.name]).join(".");
 	}
 
-	public static function getFullNameFromTypePath(typePath:TypePath) {
+	public static function getFullNameFromTypePath(typePath:TypePath):String {
 		return typePath.pack.concat([typePath.name]).join(".");
 	}
 
@@ -36,6 +36,20 @@ class MacroUtil {
 				throw "unexcepted expr";
 		}
 		return path;
+	}
+
+	public static function extendsBaseMeta(classType:ClassType):Bool {
+		var superClass = classType.superClass.t.get();
+		return superClass.meta.has(":base");
+	}
+
+	public static function hasConstructor(fields:Array<Field>):Bool {
+		for(field in fields) {
+			if(field.name == "new") {
+				return true;
+			}
+		}
+		return false;
 	}
 }
 

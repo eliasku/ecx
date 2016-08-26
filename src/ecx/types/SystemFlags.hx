@@ -3,9 +3,6 @@ package ecx.types;
 @:dce @:final @:unreflective
 @:enum abstract SystemFlags(Int) {
 
-    // system is getting part in entities processing (check families and etc)
-    var PROCESSOR = 1;
-
     // system is not a part of game loop, update method is not called every frame
     var IDLE = 2;
 

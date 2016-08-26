@@ -7,6 +7,13 @@ import haxe.macro.Expr;
 @:final
 class FieldsBuilder {
 
+    public static function push(fields:Array<Field>, block:Expr) {
+        var newFields = build(block);
+        for(newField in newFields) {
+            fields.push(newField);
+        }
+    }
+
     public static function build(block:Expr):Array<Field> {
         var fields:Array<Field> = [];
         var exprs:Array<Expr> = EnumTools.extract(block.expr, ExprDef.EBlock(x) => x);

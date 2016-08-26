@@ -23,6 +23,7 @@ class TestAll {
 		runner.addCase(new ComponentTest());
 		runner.addCase(new MapToTest());
 		runner.addCase(new IssuesTest());
+//		runner.addCase(new ecx.concept.test.ConceptTest());
 	}
 
 	static function run(runner:Runner) {

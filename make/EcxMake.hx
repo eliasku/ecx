@@ -18,13 +18,13 @@ class EcxMake extends hxmake.Module {
 		apply(IdeaPlugin);
 
 		library(function(ext:HaxelibExt) {
-			ext.config.version = "0.0.5";
+			ext.config.version = "2.0.0-wip";
 			ext.config.description = "ECX entity-component-system framework";
 			ext.config.url = "https://github.com/eliasku/ecx";
 			ext.config.tags = ["entity", "component", "system", "ecs", "ces", "cross"];
 			ext.config.contributors = ["eliasku"];
 			ext.config.license = "MIT";
-			ext.config.releasenote = "Typed component-table data";
+			ext.config.releasenote = "API 2.0";
 
 			ext.pack.includes = ["src", "haxelib.json", "README.md"];
 		});

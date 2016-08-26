@@ -15,7 +15,7 @@ class CInt32RingBuffer {
 
     public function new(capacity:Int) {
         _mask = capacity - 1;
-        #if debug
+        #if ecx_debug
         if(capacity == 0) throw 'non-zero capacity is required';
         if((_mask & capacity) != 0) throw 'capacity $capacity must be power of two';
         #end

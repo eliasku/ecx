@@ -2,14 +2,25 @@ package ecx.types;
 
 import ecx.ds.CInt32Array;
 
+@:final @:unreflective @:dce
 class EntityMultiSet {
 
 	public var length(default, null):Int = 0;
 	public var buffer(default, null):CInt32Array;
 	public var changed(default, null):Bool = false;
 
-	public function new() {
+	inline public function new() {
 		buffer = new CInt32Array(16);
+	}
+
+	inline public function has(entity:Entity):Bool {
+		// TODO: mod bin search
+		for(i in 0...length) {
+			if(buffer[i] == entity.id) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public function place(entity:Entity) {
@@ -27,6 +38,7 @@ class EntityMultiSet {
 	}
 
 	public function delete(entity:Entity) {
+		// TODO: mod bin search
 		for (i in 0...length) {
 			if (buffer[i] == entity.id) {
 				buffer[i] = 0xDEADBABE;
@@ -72,7 +84,7 @@ class EntityMultiSet {
 	}
 }
 
-@:final @:unreflective @:dce @:generic
+@:final @:unreflective @:dce
 class EntityMultiSetIterator {
 
 	public var index:Int;

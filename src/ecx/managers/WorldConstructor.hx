@@ -1,8 +1,6 @@
 package ecx.managers;
 
 import ecx.types.ComponentTable;
-import ecx.types.ComponentTableData;
-import ecx.types.ComponentType;
 import ecx.ds.CBitArray;
 import ecx.types.EntityData;
 import ecx.ds.CInt32RingBuffer;
@@ -30,29 +28,40 @@ class WorldConstructor {
 
 	static function construct(world:World, capacity:Int, config:WorldConfig) {
 		world.capacity = nextPowerOfTwo(capacity);
-		createComponentsData(world);
+		createComponentsData(config, world);
 		createEntityManager(world);
-		createSystemLookup(world, config);
-		createSystemsOrder(world, config);
-		routeSystems(world);
+		createServicesLookup(world, config);
+		createServicesOrder(world, config);
+		routeServices(world);
 		createFamilyList(world);
-		initializeSystems(world);
+		initializeServices(world);
 		deleteConfigurators(world);
 	}
 
-	static function createComponentsData(world:World) {
-		var capacity = world.capacity;
-		var typesCount = world.engine.getComponentTypesCount();
-		var types = world.engine._types;
-
-		var components = new ComponentTableData(typesCount);
-		for(typeId in 0...typesCount) {
-			var componentType = new ComponentType(typeId);
-			var qualifiedClassName = types.getTypeInfoByComponentType(componentType).basePath;
-			components[typeId] = ComponentTable.createArrayData(qualifiedClassName, capacity);
+	@:access(ecx.Component)
+	static function createComponentsData(config:WorldConfig, world:World) {
+		var components:Array<Component> = [];
+		var maxType = 0;
+		for(service in config._services) {
+			if(Std.is(service, Component)) {
+				var component:Component = cast service;
+				components.push(component);
+				var typeId = @:privateAccess component.__componentType().id;
+				if(typeId > maxType) {
+					maxType = typeId;
+				}
+			}
 		}
 
-		world.components = components;
+		var capacity = world.capacity;
+		var typesCount = maxType + 1;
+
+		var table = new ComponentTable(typesCount);
+		for(component in components) {
+			table[component.__componentType().id] = component;
+		}
+
+		world.components = table;
 	}
 
 	static function createEntityManager(world:World) {
@@ -75,20 +84,21 @@ class WorldConstructor {
 		world._mapToData = map;
 	}
 
-	static function createSystemLookup(world:World, config:WorldConfig) {
-		var lookup = new Array<System>();
-		for(system in config._systems) {
-			lookup[system.__getType().id] = system;
+	@:access(ecx.Service)
+	static function createServicesLookup(world:World, config:WorldConfig) {
+		var services = new Array<Service>();
+		for(system in config._services) {
+			services[system.__serviceType().id] = system;
 		}
-		world._lookup = CArray.fromArray(lookup);
+		world._services = CArray.fromArray(services);
 	}
 
-	static function createSystemsOrder(world:World, config:WorldConfig) {
-		var systems = config._systems;
+	static function createServicesOrder(world:World, config:WorldConfig) {
+		var services = config._services;
 		var priorities = config._priorities;
 
 		var sortIndices:Array<Int> = [];
-		for(i in 0...systems.length) {
+		for(i in 0...services.length) {
 			sortIndices.push(i);
 		}
 
@@ -96,25 +106,33 @@ class WorldConstructor {
 			return priorities[x] - priorities[y];
 		});
 
-		world._orderedSystems = new CArray(systems.length);
-		for(i in 0...systems.length) {
-			world._orderedSystems[i] = systems[sortIndices[i]];
+		world._orderedServices = new CArray(services.length);
+		for(i in 0...services.length) {
+			world._orderedServices[i] = services[sortIndices[i]];
 		}
 	}
 
-	static function routeSystems(world:World) {
+	@:access(ecx.Service)
+	static function routeServices(world:World) {
 		var processors = [];
 		var active = [];
 
-		for(system in world._orderedSystems) {
-			system.world = world;
-			system._inject();
-			if(system._isProcessor()) {
-				processors.push(system);
+		for(service in world._orderedServices) {
+			service.world = world;
+
+			var system:System = Std.instance(service, System);
+			if(system != null) {
+				system.__configure();
+				if(system._families != null && system._families.length > 0) {
+					processors.push(system);
+				}
+				if(!system._isIdle()) {
+					active.push(system);
+				}
 			}
-			if(!system._isIdle()) {
-				active.push(system);
-			}
+
+			service.__allocate();
+			service.__inject();
 		}
 		world._systems = CArray.fromArray(active);
 		world._processors = CArray.fromArray(processors);
@@ -132,9 +150,10 @@ class WorldConstructor {
 		world._families = CArray.fromArray(families);
 	}
 
-	static function initializeSystems(world:World) {
-		for(system in world._orderedSystems) {
-			system.initialize();
+	@:access(ecx.Service)
+	static function initializeServices(world:World) {
+		for(service in world._orderedServices) {
+			service.initialize();
 		}
 	}
 
@@ -145,25 +164,6 @@ class WorldConstructor {
 	// TODO: mem usage calculator
 	public static function calculateMemoryUsage(capacity:Int, components:Int, families:Int) {
 		var min = 0;
-		var ptrSize = 4;
-		var idSize = 4;
-		var bitArraySize = 4 * Math.ceil(capacity / 32);
-
-		// 4 flag bit arrays
-		min += (4 + families) * bitArraySize;
-
-		// component storage
-		min += ptrSize * components;
-
-		// per component
-		min += (capacity * ptrSize) * components;
-
-		// entity ring buffer
-		min += capacity * idSize;
-
-		// entity data map
-		min += (ptrSize + ptrSize + idSize) * capacity;
-
 		return min;
 	}
 }

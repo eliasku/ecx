@@ -6,13 +6,13 @@ import ecx.ds.CBitArray;
 @:final
 @:keep
 @:unreflective
-@:access(ecx.System, ecx.EntityView)
+@:access(ecx.System)
 class FamilyData {
 
     public var entities(default, null):EntityMultiSet;
 
     var _containedBits:CBitArray;
-    var _requiredComponents:ComponentTableData;
+    var _requiredComponents:ComponentTable;
     var _system:System;
 
     function new(system:System) {
@@ -34,7 +34,7 @@ class FamilyData {
     function check(entity:Entity) {
         var rc = _requiredComponents;
         for(i in 0...rc.length) {
-            if(rc[i][entity.id] == null) {
+            if(!rc[i].has(entity)) {
                 return false;
             }
         }
@@ -47,41 +47,41 @@ class FamilyData {
         var matched = active && check(entity);
         var contained = _containedBits.get(entity.id);
         if(matched && !contained) {
-            #if debug
-//            if(entities.has(entity)) throw "Family flags assets: id duplicated";
+            #if ecx_debug
+            if(entities.has(entity)) throw "Family flags assets: id duplicated";
             #end
 
             _containedBits.enable(entity.id);
             entities.place(entity);
             _system.onEntityAdded(entity, this);
 
-            #if debug
+            #if ecx_debug
             if(!_containedBits.get(entity.id)) throw "Family flags assets: can't enable";
             #end
         }
         else if(!matched && contained) {
-            #if debug
-//            if(!entities.has(entity)) throw "Family flags assets: id not found";
+            #if ecx_debug
+            if(!entities.has(entity)) throw "Family flags assets: id not found";
             #end
 
             _containedBits.disable(entity.id);
             entities.delete(entity);
             _system.onEntityRemoved(entity, this);
 
-            #if debug
-//            if(entities.has(entity)) throw "Family flags assets: id duplicated";
+            #if ecx_debug
+            if(entities.has(entity)) throw "Family flags assets: id duplicated";
             if(_containedBits.get(entity.id)) throw "Family flags assets: can't disable";
             #end
         }
 
-        #if debug
-//        if(active == false && entities.has(entity)) {
-//            throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
-//        }
+        #if ecx_debug
+        if(active == false && entities.has(entity)) {
+            throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
+        }
         #end
     }
 
-#if debug
+#if ecx_debug
     var _debugEntitiesCopy:Array<Entity>;
 
     public function debugLock() {

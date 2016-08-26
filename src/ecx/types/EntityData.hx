@@ -11,9 +11,4 @@ class EntityData {
         this.entity = entity;
         this.world = world;
     }
-
-    public var view(get, never):EntityView;
-    inline function get_view():EntityView {
-        return @:privateAccess new EntityView(this);
-    }
 }

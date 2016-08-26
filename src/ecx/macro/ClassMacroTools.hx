@@ -2,39 +2,29 @@ package ecx.macro;
 
 #if macro
 
-import ecx.types.SystemType;
-import ecx.types.SystemSpec;
+import ecx.types.ServiceType;
+import ecx.types.ServiceSpec;
 import ecx.types.ComponentType;
-import ecx.types.ComponentSpec;
 import haxe.macro.Expr;
 
 @:final
 class ClassMacroTools {
 
 	public static function componentType<T:Component>(componentClass:ExprOf<Class<T>>):ExprOf<ComponentType> {
-		return macro $componentClass.__TYPE;
+		return macro $componentClass.__COMPONENT;
 	}
 
-	public static function componentSpec<T:Component>(componentClass:ExprOf<Class<T>>):ExprOf<ComponentSpec> {
-		return macro $componentClass.__SPEC;
+	public static function serviceType<T:Service>(serviceClass:ExprOf<Class<T>>):ExprOf<ServiceType> {
+		return macro $serviceClass.__TYPE;
 	}
 
-	public static function systemType<T:System>(systemClass:ExprOf<Class<T>>):ExprOf<SystemType> {
-		return macro $systemClass.__TYPE;
+	public static function serviceSpec<T:Service>(serviceClass:ExprOf<Class<T>>):ExprOf<ServiceSpec> {
+		return macro $serviceClass.__SPEC;
 	}
 
-	public static function systemSpec<T:System>(systemClass:ExprOf<Class<T>>):ExprOf<SystemSpec> {
-		return macro $systemClass.__SPEC;
-	}
-
-	public static function componentTypeList<T:Component>(componentClasslist:Array<ExprOf<Class<T>>>):ExprOf<Array<ComponentType>> {
-		var types = [for(cls in componentClasslist) componentType(cls)];
+	public static function componentTypeList<T:Component>(componentClasses:Array<ExprOf<Class<T>>>):ExprOf<Array<ComponentType>> {
+		var types = [ for(cls in componentClasses) componentType(cls) ];
 		return macro $a{types};
-	}
-
-	public static function allocComponent<T:Component>(componentClass:ExprOf<Class<T>>):ExprOf<T> {
-		var tp = MacroUtil.getConstTypePath(componentClass);
-		return macro @:privateAccess new $tp();
 	}
 }
 
