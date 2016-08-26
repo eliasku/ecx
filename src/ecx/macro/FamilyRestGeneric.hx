@@ -9,15 +9,10 @@ class FamilyRestGeneric {
 
     public static function apply():ComplexType {
 
-        var tpEntity = {
-            pack: ["ecx"],
-            name: "Entity"
-        };
-
         var tpCollection = {
-            pack: ["ecx", "ds"],
-            name: "CVector",
-            params: [TypeParam.TPType(ComplexType.TPath(tpEntity))]
+            pack: ["ecx", "types"],
+            name: "EntityMultiSet",
+            params: []
         };
 
         return ComplexType.TPath(tpCollection);

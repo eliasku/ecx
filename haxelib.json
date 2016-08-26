@@ -1,5 +1,5 @@
 {
-	"name": "ecx2",
+	"name": "ecx",
 	"license": "MIT",
 	"tags": [
 		"entity",
@@ -14,7 +14,7 @@
 	"contributors": [
 		"eliasku"
 	],
-	"releasenote": "Typed component-table data",
-	"version": "0.0.5",
+	"releasenote": "API 2.0",
+	"version": "2.0.0-wip",
 	"url": "https://github.com/eliasku/ecx"
 }

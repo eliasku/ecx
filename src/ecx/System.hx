@@ -1,6 +1,6 @@
 package ecx;
 
-import ecx.ds.CVector;
+import ecx.types.EntityMultiSet;
 import ecx.types.FamilyData;
 import ecx.types.SystemFlags;
 import haxe.macro.Expr;
@@ -42,7 +42,7 @@ class System extends Service {
 	//@:unreflective
 	function onEntityRemoved(entity:Entity, family:FamilyData) {}
 
-	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<CVector<Entity>> {
+	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component>>>):ExprOf<EntityMultiSet> {
 		var componentTypes = requiredComponents.componentTypeList();
 		return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypes));
 	}
@@ -50,7 +50,7 @@ class System extends Service {
 	function __configure() {}
 
 	@:nonVirtual @:unreflective
-	function _addFamily(family:FamilyData):CVector<Entity> {
+	function _addFamily(family:FamilyData):EntityMultiSet {
 		if(_families == null) {
 			_families = [];
 		}

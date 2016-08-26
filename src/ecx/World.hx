@@ -114,8 +114,16 @@ class World {
 		lockFamilies();
 		#end
 
-		deleteEntities(_removeList);
-		changeEntities(_changeList);
+		if(_removeList.length > 0 || _changeList.length > 0) {
+			deleteEntities(_removeList);
+			changeEntities(_changeList);
+			for(family in _families) {
+				var entities = family.entities;
+				if(entities.changed) {
+					entities.invalidate();
+				}
+			}
+		}
 
 		#if ecx_debug
 		guardFamilies();

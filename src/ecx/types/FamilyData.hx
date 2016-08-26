@@ -1,6 +1,5 @@
 package ecx.types;
 
-import ecx.ds.CVector;
 import ecx.ds.CArray;
 import ecx.ds.CBitArray;
 
@@ -10,7 +9,7 @@ import ecx.ds.CBitArray;
 @:access(ecx.System)
 class FamilyData {
 
-    public var entities(default, null):CVector<Entity>;
+    public var entities(default, null):EntityMultiSet;
 
     var _containedBits:CBitArray;
     var _requiredComponents:ComponentTable;
@@ -18,7 +17,7 @@ class FamilyData {
 
     function new(system:System) {
         var capacity = system.world.capacity;
-        entities = new CVector<Entity>();
+        entities = new EntityMultiSet();
         _containedBits = new CBitArray(capacity);
         _system = system;
     }
@@ -53,7 +52,7 @@ class FamilyData {
             #end
 
             _containedBits.enable(entity.id);
-            entities.push(entity);
+            entities.place(entity);
             _system.onEntityAdded(entity, this);
 
             #if ecx_debug
@@ -66,7 +65,7 @@ class FamilyData {
             #end
 
             _containedBits.disable(entity.id);
-            entities.remove(entity);
+            entities.delete(entity);
             _system.onEntityRemoved(entity, this);
 
             #if ecx_debug
