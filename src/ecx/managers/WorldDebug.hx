@@ -17,7 +17,7 @@ class WorldDebug {
 			var family = world._families.get(i);
 			for(entity in family.entities) {
 				if(!entity.isValid) throw 'FAMILY GUARD: Invalid entity id: ${entity.id}';
-				if(world._aliveMask.isFalse(entity.id)) throw 'FAMILY GUARD: ${entity.id} is dead, but in family';
+				if(world._aliveMask.isFalse(entity.id)) throw 'FAMILY GUARD: ${entity.id} is dead, but in family ${family.entities.length}}';
 			}
 		}
 	}

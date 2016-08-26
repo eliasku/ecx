@@ -119,8 +119,16 @@ class World {
 		lockFamilies();
 		#end
 
-		deleteEntities(_removeList);
-		changeEntities(_changeList);
+		if(_removeList.length > 0 || _changeList.length > 0) {
+			deleteEntities(_removeList);
+			changeEntities(_changeList);
+			for(family in _families) {
+				var entities = family.entities;
+				if(entities.changed) {
+					entities.invalidate();
+				}
+			}
+		}
 
 		#if debug
 		guardFamilies();
@@ -236,11 +244,6 @@ class World {
 			_internal_entityChanged(entity);
 		}
 	}
-
-	/** Iterator for *alive* entities **/
-//	inline public function entities():WorldEntitiesIterator {
-//		return new WorldEntitiesIterator(_pool);
-//	}
 
 	/** Iterator for *active* systems ordered by priority **/
 	inline public function systems():CArrayIterator<System> {

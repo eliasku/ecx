@@ -1,6 +1,5 @@
 package ecx.types;
 
-import ecx.ds.CVector;
 import ecx.ds.CArray;
 import ecx.ds.CBitArray;
 
@@ -10,7 +9,7 @@ import ecx.ds.CBitArray;
 @:access(ecx.System, ecx.EntityView)
 class FamilyData {
 
-    public var entities(default, null):CVector<Entity>;
+    public var entities(default, null):EntityMultiSet;
 
     var _containedBits:CBitArray;
     var _requiredComponents:ComponentTableData;
@@ -18,7 +17,7 @@ class FamilyData {
 
     function new(system:System) {
         var capacity = system.world.capacity;
-        entities = new CVector<Entity>();
+        entities = new EntityMultiSet();
         _containedBits = new CBitArray(capacity);
         _system = system;
     }
@@ -49,11 +48,11 @@ class FamilyData {
         var contained = _containedBits.get(entity.id);
         if(matched && !contained) {
             #if debug
-            if(entities.has(entity)) throw "Family flags assets: id duplicated";
+//            if(entities.has(entity)) throw "Family flags assets: id duplicated";
             #end
 
             _containedBits.enable(entity.id);
-            entities.push(entity);
+            entities.place(entity);
             _system.onEntityAdded(entity, this);
 
             #if debug
@@ -62,23 +61,23 @@ class FamilyData {
         }
         else if(!matched && contained) {
             #if debug
-            if(!entities.has(entity)) throw "Family flags assets: id not found";
+//            if(!entities.has(entity)) throw "Family flags assets: id not found";
             #end
 
             _containedBits.disable(entity.id);
-            entities.remove(entity);
+            entities.delete(entity);
             _system.onEntityRemoved(entity, this);
 
             #if debug
-            if(entities.has(entity)) throw "Family flags assets: id duplicated";
+//            if(entities.has(entity)) throw "Family flags assets: id duplicated";
             if(_containedBits.get(entity.id)) throw "Family flags assets: can't disable";
             #end
         }
 
         #if debug
-        if(active == false && entities.has(entity)) {
-            throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
-        }
+//        if(active == false && entities.has(entity)) {
+//            throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
+//        }
         #end
     }
 
