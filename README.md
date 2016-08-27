@@ -13,9 +13,22 @@ ECX is Entity Component System framework for Haxe
 - [Asteroids Example](https://github.com/eliasku/ecx-richardlord-asteroids)
 - [Benchmarks](https://github.com/eliasku/ecx-benchmarks)
 
-## System
+## World
+
+### Initialization
+
+```
+var config = new WorldConfig([...]);
+var world = Engine.initialize().createWorld(config, ?potCapacity);
+```
+
+## Service
+
+All services are known at world creation. World provides possibility to resolve services. `World::resolve` use constant `Class<Service>` for resolving. At compile-time these expressions will be translated to lookup array access by constant index with unsafe cast (pseudo example: `cast _services[8]`). For `hxcpp` poiter trick is used to avoid generating `dynamic_cast`.
 
 ### Injection
+
+Each service could have dependencies on different services. With `Wire<T:Service>` you could inject your dependencies to instance fields.
 
 For example we need to inject TimeSystem system to our MovementSystem
 ```
@@ -31,6 +44,7 @@ class MovementSystem extends System {
 
 ### Family
 
+For all `System`
 For example we need to track all active(live) entities with components: Transform, Node and Renderable
 ```
 class MovementSystem extends System {
@@ -50,21 +64,51 @@ class MovementSystem extends System {
 
 * `IDLE`: System doesn't override `update` method. Should not be updated.
 * `CONFIG`: System is defined with `@:config` meta. This system is just configurator. It will be deleted after World initialization phase.
-* `PROCESSOR`: System has at least one entity Family to process.
 
 ## Component
 
-## World
-
-### Initialization
+Component is a way to associate [data] per `Entity`. You could just use component-builders to define your own components.
 
 ```
-var config = new WorldConfig([...]);
-var world = Engine.initialize().createWorld(config, ?potCapacity);
+class Position extends AutoComp<Point> {}
+
+/// later just use it like Point class per entity
+_position.get(entity).x = 10;
 ```
+
+Or you could create any custom crazy ComponentStorage / ComponentManager.
+```
+class Color extends Service implements Component {
+    // BitmapData is used just to demonstrate that you are not limited to anything to store <component data> per <entity>
+    // Each pixel is color for entity
+    var _colors:BitmapData;
+    
+    ...
+    
+    inline public function get(entity:Entity):Int {
+        _colors.getPixel32(entity.id % _stride, Std.int(entity.id / _stride));
+    }
+    
+    ....
+}
+```
+
+**Injection:** World `Component` is `Service`, so you are able to invoke all messages directly to other services.
+**Implementation:** `Component` is just interface, you could iterate all registered components and access their base API per entity. It's handy for automatically cloning or serialization.
 
 ## CTTI
-`ClassMacroTools`
+`ServiceType`, `ServiceSpec`, `ComponentType`, `ClassMacroTools`
 
 ## RTTI
-`TypeManager`
+`TypeManager` (WIP)
+
+
+## TODO:
+
+- Rethink world initialization:
+- - Are we are ok that instance of service could be created outside by default?
+- - Do we need to initialize Engine each time (maybe just remake it to static access)
+- Rethink system-flags
+- Delete configurator services
+- Component builders (`AutoComp<T>`, `BitComp<T>`, `ValueComp<T>`, etc)
+- Unify `Component` interface with all methods and require impl-type `Component<T>`? (`Void`/`Noise`/`Empty` are allowed)
