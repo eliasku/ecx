@@ -1,29 +1,20 @@
 package ecx.types;
 
+import ecx.ds.CBitArray;
 import ecx.ds.CInt32Array;
 
 @:final @:unreflective @:dce
-class EntityMultiSet {
+class EntityVector {
 
-	inline static var TO_REMOVE:Int = 0x15F0DEAD;
+	inline static var TO_REMOVE:Int = 0x3FFFFFFF;
 
 	public var length(default, null):Int = 0;
 	public var buffer(default, null):CInt32Array;
+	public var bits(default, null):CBitArray;
 	public var changed(default, null):Bool = false;
 
-	inline public function new() {
-		buffer = new CInt32Array(16);
-	}
-
-	// just for debug
-	public function has(entity:Entity):Bool {
-		// TODO: mod bin search
-		for(i in 0...length) {
-			if(buffer[i] == entity.id) {
-				return true;
-			}
-		}
-		return false;
+	inline public function new(initialCapacity:Int = 16) {
+		buffer = new CInt32Array(initialCapacity);
 	}
 
 	public function place(entity:Entity) {
@@ -86,6 +77,18 @@ class EntityMultiSet {
 			buffer[i] = data[i];
 		}
 	}
+
+#if ecx_debug
+	public function __debugHas(entity:Entity):Bool {
+		// TODO: mod bin search
+		for(i in 0...length) {
+			if(buffer[i] == entity.id) {
+				return true;
+			}
+		}
+		return false;
+	}
+#end
 }
 
 @:final @:unreflective @:dce
@@ -95,7 +98,7 @@ class EntityMultiSetIterator {
 	public var end:Int;
 	public var data:CInt32Array;
 
-	inline public function new(vector:EntityMultiSet) {
+	inline public function new(vector:EntityVector) {
 		index = 0;
 		end = vector.length;
 		data = vector.buffer;

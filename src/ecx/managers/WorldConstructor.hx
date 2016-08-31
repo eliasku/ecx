@@ -13,25 +13,31 @@ import ecx.types.FamilyData;
 @:allow(ecx.World)
 class WorldConstructor {
 
-	static function nextPowerOfTwo(value:Int):Int {
-		if (value == 0) {
-			return 1;
-		}
-		--value;
-		value |= value >> 1;
-		value |= value >> 2;
-		value |= value >> 4;
-		value |= value >> 8;
-		value |= value >> 16;
-		return value + 1;
-	}
-
 	static function construct(world:World, capacity:Int, config:WorldConfig) {
-		world.capacity = nextPowerOfTwo(capacity);
-		createComponentsData(config, world);
-		createEntityManager(world);
-		createServicesLookup(world, config);
-		createServicesOrder(world, config);
+		#if ecx_debug
+		if(config == null) throw "world config required";
+		if(capacity <= 1) throw "capacity is so low: " + capacity;
+		if(capacity >= 0x3FFFFFFF - 1) throw "too much entities: " + capacity;
+		#end
+
+		// capacity alignment
+		capacity = nextPowerOfTwo(capacity - 1) + 1;
+		world.capacity = capacity;
+
+		// components table
+		world.components = createComponentsData(config);
+
+		// entities support
+		world._pool = createEntityPool(capacity);
+		world._mapToData = createEntityWrappers(world);
+		world._aliveMask = new CBitArray(capacity);
+		world._activeFlags = new CBitArray(capacity);
+		world._removedFlags = new CBitArray(capacity);
+		world._changedFlags = new CBitArray(capacity);
+
+		// services
+		world._services = createServicesLookup(config);
+		world._orderedServices = createServicesOrder(config);
 		routeServices(world);
 		createFamilyList(world);
 		initializeServices(world);
@@ -39,61 +45,56 @@ class WorldConstructor {
 	}
 
 	@:access(ecx.Component)
-	static function createComponentsData(config:WorldConfig, world:World) {
-		var components:Array<Component> = [];
-		var maxType = 0;
+	static function createComponentsData(config:WorldConfig):ComponentTable {
+		var components:Array<Component<Dynamic>> = [];
+		var maxTypeId = 0;
 		for(service in config._services) {
 			if(Std.is(service, Component)) {
-				var component:Component = cast service;
+				var component:Component<Dynamic> = cast service;
 				components.push(component);
-				var typeId = @:privateAccess component.__componentType().id;
-				if(typeId > maxType) {
-					maxType = typeId;
+				var typeId = component.__componentType().id;
+				if(typeId > maxTypeId) {
+					maxTypeId = typeId;
 				}
 			}
 		}
 
-		var capacity = world.capacity;
-		var typesCount = maxType + 1;
-
-		var table = new ComponentTable(typesCount);
+		var table = new ComponentTable(maxTypeId + 1);
 		for(component in components) {
 			table[component.__componentType().id] = component;
 		}
-
-		world.components = table;
+		return table;
 	}
 
-	static function createEntityManager(world:World) {
-		var capacity = world.capacity;
-		var pool = new CInt32RingBuffer(capacity);
-		for(i in 0...capacity) {
-			pool.set(i, i);
+	static function createEntityPool(capacity:Int):CInt32RingBuffer {
+		// capacity is POT; 0 is invalid;
+		// generate valid entities: {1, 2, 3, 4} for cap = 5
+		var pool = new CInt32RingBuffer(capacity - 1);
+		for(i in 0...pool.length) {
+			pool.set(i, i + 1);
 		}
+		return pool;
+	}
 
-		world._pool = pool;
-		world._aliveMask = new CBitArray(capacity);
-		world._activeFlags = new CBitArray(capacity);
-		world._removedFlags = new CBitArray(capacity);
-		world._changedFlags = new CBitArray(capacity);
-
-		var map = new CArray<EntityData>(capacity);
-		for(id in 0...capacity) {
-			map[id] = new EntityData(new Entity(id), world);
+	// unused
+	static function createEntityWrappers(world:World) {
+		var wrappers = new CArray<EntityData>(world.capacity);
+		for(id in 1...wrappers.length) {
+			wrappers[id] = new EntityData(new Entity(id), world);
 		}
-		world._mapToData = map;
+		return wrappers;
 	}
 
 	@:access(ecx.Service)
-	static function createServicesLookup(world:World, config:WorldConfig) {
+	static function createServicesLookup(config:WorldConfig):CArray<Service> {
 		var services = new Array<Service>();
 		for(system in config._services) {
 			services[system.__serviceType().id] = system;
 		}
-		world._services = CArray.fromArray(services);
+		return CArray.fromArray(services);
 	}
 
-	static function createServicesOrder(world:World, config:WorldConfig) {
+	static function createServicesOrder(config:WorldConfig):CArray<Service> {
 		var services = config._services;
 		var priorities = config._priorities;
 
@@ -106,10 +107,11 @@ class WorldConstructor {
 			return priorities[x] - priorities[y];
 		});
 
-		world._orderedServices = new CArray(services.length);
+		var orderedServices = new CArray<Service>(services.length);
 		for(i in 0...services.length) {
-			world._orderedServices[i] = services[sortIndices[i]];
+			orderedServices[i] = services[sortIndices[i]];
 		}
+		return orderedServices;
 	}
 
 	@:access(ecx.Service)
@@ -159,6 +161,19 @@ class WorldConstructor {
 
 	static function deleteConfigurators(world:World) {
 		// TODO: somehow
+	}
+
+	static function nextPowerOfTwo(value:Int):Int {
+		if (value == 0) {
+			return 1;
+		}
+		--value;
+		value |= value >> 1;
+		value |= value >> 2;
+		value |= value >> 4;
+		value |= value >> 8;
+		value |= value >> 16;
+		return value + 1;
 	}
 
 	// TODO: mem usage calculator

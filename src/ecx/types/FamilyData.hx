@@ -9,7 +9,7 @@ import ecx.ds.CBitArray;
 @:access(ecx.System)
 class FamilyData {
 
-    public var entities(default, null):EntityMultiSet;
+    public var entities(default, null):EntityVector;
 
     var _containedBits:CBitArray;
     var _requiredComponents:ComponentTable;
@@ -17,7 +17,7 @@ class FamilyData {
 
     function new(system:System) {
         var capacity = system.world.capacity;
-        entities = new EntityMultiSet();
+        entities = new EntityVector();
         _containedBits = new CBitArray(capacity);
         _system = system;
     }
@@ -51,7 +51,7 @@ class FamilyData {
         var contained = _containedBits.get(entity.id);
         if(matched && !contained) {
             #if ecx_debug
-            if(entities.has(entity)) throw "Family flags assets: id duplicated";
+            if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
             #end
 
             _containedBits.enable(entity.id);
@@ -64,7 +64,7 @@ class FamilyData {
         }
         else if(!matched && contained) {
             #if ecx_debug
-            if(!entities.has(entity)) throw "Family flags assets: id not found";
+            if(!entities.__debugHas(entity)) throw "Family flags assets: id not found";
             #end
 
             _containedBits.disable(entity.id);
@@ -72,13 +72,13 @@ class FamilyData {
             _system.onEntityRemoved(entity, this);
 
             #if ecx_debug
-            if(entities.has(entity)) throw "Family flags assets: id duplicated";
+            if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
             if(_containedBits.get(entity.id)) throw "Family flags assets: can't disable";
             #end
         }
 
         #if ecx_debug
-        if(active == false && entities.has(entity)) {
+        if(active == false && entities.__debugHas(entity)) {
             throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
         }
         #end

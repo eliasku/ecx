@@ -21,6 +21,6 @@ class Environment {
 
 		config.add(new Value());
 		config.add(new TestPosition());
-		world = Engine.initialize().createWorld(config, 1000);
+		world = Engine.createWorld(config, 1000);
 	}
 }

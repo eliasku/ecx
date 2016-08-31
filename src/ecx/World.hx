@@ -1,13 +1,13 @@
 package ecx;
 
-import ecx.types.EntityMultiSet;
+import ecx.macro.MacroUtil;
+import ecx.types.EntityVector;
 import ecx.types.ComponentTable;
 import ecx.ds.CArrayIterator;
 import ecx.ds.CInt32RingBuffer;
 import ecx.managers.WorldConstructor;
 import ecx.types.FamilyData;
 import ecx.types.EntityData;
-import ecx.types.ComponentType;
 import ecx.ds.CArray;
 import ecx.ds.Cast;
 import ecx.ds.CBitArray;
@@ -28,13 +28,17 @@ class World {
 	// Identifier of this world
 	public var id(default, null):Int;
 
-	// Maximum amount of entities
+	/**
+		Maximum amount of entities including invalid/reserved.
+
+		Capacity will be rounded to power-of-two value plus one.
+		For requested capacity 3 will be allocated:
+		capacity = nearestPOT(3 - 1) + 1 = 3.
+		For capacity = 5 we have set of valid entities {1, 2, 3, 4} and one invalid is 0
+	**/
 	public var capacity(default, null):Int;
 	public var used(default, null):Int = 0;
 	public var available(get, never):Int;
-
-	// global ref
-	public var engine(default, null):Engine;
 
 	// lookup for all systems
 	var _services:CArray<Service>;
@@ -64,9 +68,8 @@ class World {
 	var _changedFlags:CBitArray;
 	var _removedFlags:CBitArray;
 
-	function new(id:Int, engine:Engine, config:WorldConfig, capacity:Int) {
+	function new(id:Int, config:WorldConfig, capacity:Int) {
 		this.id = id;
-		this.engine = engine;
 		WorldConstructor.construct(this, capacity, config);
 	}
 
@@ -75,7 +78,7 @@ class World {
 		return macro {
 			var tmp = @:privateAccess $self._services[$serviceType.id];
 			ecx.ds.Cast.unsafe(tmp, $serviceClass);
-		}
+		};
 	}
 
 	public function create():Entity {
@@ -119,7 +122,7 @@ class World {
 			deleteEntities(_removeList);
 			changeEntities(_changeList);
 			for(family in _families) {
-				var entities:EntityMultiSet = family.entities;
+				var entities:EntityVector = family.entities;
 				if(entities.changed) {
 					entities.invalidate();
 				}
@@ -150,8 +153,12 @@ class World {
 		_internal_entityChanged(entity);
 	}
 
-	macro public function componentArray<T:(Component, Service)>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<T> {
-		return macro cast @:privateAccess $self._services[componentClass.__TYPE.id];
+//	macro public function componentArray<T:(Component<Dynamic>, Service)>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<T> {
+//		return macro cast @:privateAccess $self._services[componentClass.__TYPE.id];
+//	}
+
+	inline public function getEntity(id:Int):Entity {
+		return @:privateAccess new Entity(id);
 	}
 
 	inline public function isActive(entity:Entity):Bool {
@@ -166,17 +173,17 @@ class World {
 		return 'World #$id';
 	}
 
-	inline public function hasComponent(entity:Entity, type:ComponentType):Bool {
-		return components[type.id].has(entity);
-	}
-
-	public function removeComponent(entity:Entity, type:ComponentType) {
-		var entityToComponent:Component = components[type.id];
-		entityToComponent.remove(entity);
-		if(isActive(entity)) {
-			_internal_entityChanged(entity);
-		}
-	}
+//	inline public function hasComponent(entity:Entity, type:ComponentType):Bool {
+//		return components[type.id].has(entity);
+//	}
+//
+//	public function removeComponent(entity:Entity, type:ComponentType) {
+//		var entityToComponent:Component<Dynamic> = components[type.id];
+//		entityToComponent.remove(entity);
+//		if(isActive(entity)) {
+//			_internal_entityChanged(entity);
+//		}
+//	}
 
 	public function clearComponents(entity:Entity) {
 		var componentsData = components;

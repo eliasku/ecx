@@ -1,3 +1,3 @@
 package ecx.types;
 
-typedef ComponentTable = ecx.ds.CArray<Component>;
+typedef ComponentTable = ecx.ds.CArray<Component<Dynamic>>;

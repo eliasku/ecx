@@ -51,6 +51,15 @@ class MacroUtil {
 		}
 		return false;
 	}
+
+	public static function pos(position:Dynamic, expr:Expr):Expr {
+		#if !ecx_macro_debug
+		if(position != null) {
+			expr.pos = position;
+		}
+		#end
+		return expr;
+	}
 }
 
 #end

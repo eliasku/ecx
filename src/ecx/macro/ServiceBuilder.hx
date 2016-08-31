@@ -93,9 +93,12 @@ class ServiceBuilder {
 		}
 		if(injectFields.length > 0) {
 			for(i in 0...injectFields.length) {
-				var expr = macro {
-					$i{injectFields[i].name} = __world.resolve($i{injectType[i]});
-				};
+				var injectField = injectFields[i];
+
+				var expr = macro $i{injectField.name} =
+					#if !ecx_macro_debug @:pos($v{injectField.pos}) #end
+				__world.resolve($i{injectType[i]});
+
 				exprs.push(expr);
 			}
 		}

@@ -19,8 +19,12 @@ ECX is Entity Component System framework for Haxe
 
 ```
 var config = new WorldConfig([...]);
-var world = Engine.initialize().createWorld(config, ?potCapacity);
+var world = Engine.createWorld(config, ?capacity);
 ```
+
+## Entity
+
+Entity is just integer id value. `0` is reserved as invalid id.
 
 ## Service
 
@@ -82,13 +86,13 @@ class Color extends Service implements Component {
     // BitmapData is used just to demonstrate that you are not limited to anything to store <component data> per <entity>
     // Each pixel is color for entity
     var _colors:BitmapData;
-    
+
     ...
-    
+
     inline public function get(entity:Entity):Int {
         _colors.getPixel32(entity.id % _stride, Std.int(entity.id / _stride));
     }
-    
+
     ....
 }
 ```
@@ -102,13 +106,19 @@ class Color extends Service implements Component {
 ## RTTI
 `TypeManager` (WIP)
 
+## Debug
+
+Use `-D ecx_debug` for debugging
+Use `-D ecx_macro_debug` for macro debugging
 
 ## TODO:
 
 - Rethink world initialization:
 - - Are we are ok that instance of service could be created outside by default?
-- - Do we need to initialize Engine each time (maybe just remake it to static access)
 - Rethink system-flags
 - Delete configurator services
-- Component builders (`AutoComp<T>`, `BitComp<T>`, `ValueComp<T>`, etc)
-- Unify `Component` interface with all methods and require impl-type `Component<T>`? (`Void`/`Noise`/`Empty` are allowed)
+- Add more information on specific cases of AutoComp<T>
+- Pack<T> for dense storages
+- Prevent `Wire<Service>`, `Wire<System>` cases
+- Entity Generations
+- Family entity vector count-sort by bit-array in the worst case?
