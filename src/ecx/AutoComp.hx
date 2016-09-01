@@ -1,24 +1,21 @@
-package ecx.storage;
+package ecx;
 
 import ecx.types.ComponentType;
 
 #if !macro
-@:autoBuild(ecx.storage.AutoCompBuilder.build())
+@:autoBuild(ecx.macro.AutoCompBuilder.build())
 #end
-@:base
-class AutoComp<T> extends Service implements Component<T> {
+@:core
+class AutoComp<T> extends Service implements IComponent {
 
-	public function get(entity:Entity):T {
-		return null;
-	}
-
+	#if idea
+	public function get(entity:Entity):T return null;
 	public function set(entity:Entity, component:T) {}
+	public function create(entity:Entity):T return null;
+	#end
+
 	public function has(entity:Entity):Bool {
 		return false;
-	}
-
-	public function create(entity:Entity):T {
-		return null;
 	}
 
 	public function remove(entity:Entity) {}

@@ -38,27 +38,42 @@ class MacroUtil {
 		return path;
 	}
 
-	public static function extendsBaseMeta(classType:ClassType):Bool {
+	public static function extendsMeta(classType:ClassType, meta:String):Bool {
 		var superClass = classType.superClass.t.get();
-		return superClass.meta.has(":base");
+		return superClass.meta.has(meta);
 	}
 
-	public static function hasConstructor(fields:Array<Field>):Bool {
+	public static function hasMethod(fields:Array<Field>, name:String):Bool {
 		for(field in fields) {
-			if(field.name == "new") {
-				return true;
+			if(field.name == name) {
+				return switch(field.kind) {
+					case FFun(_): true;
+					default: false;
+				}
 			}
 		}
 		return false;
 	}
 
-	public static function pos(position:Dynamic, expr:Expr):Expr {
-		#if !ecx_macro_debug
-		if(position != null) {
-			expr.pos = position;
+	public static function hasMethodInClassFields(fields:Array<ClassField>, name:String):Bool {
+		for(field in fields) {
+			if(field.name == name) {
+				return switch(field.kind) {
+					case FMethod(_): true;
+					default: false;
+				}
+			}
 		}
-		#end
-		return expr;
+		return false;
+	}
+
+	public static function hasInterface(classType:ClassType, fullName:String) {
+		for(iref in classType.interfaces) {
+			if(MacroUtil.getFullNameFromBaseType(iref.t.get()) == fullName) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
 

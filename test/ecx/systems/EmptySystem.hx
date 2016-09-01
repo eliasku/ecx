@@ -1,4 +1,4 @@
-package ecx;
+package ecx.systems;
 
 import ecx.components.TestPosition;
 import ecx.components.Value;

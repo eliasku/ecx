@@ -44,13 +44,13 @@ class WorldConstructor {
 		deleteConfigurators(world);
 	}
 
-	@:access(ecx.Component)
+	@:access(ecx.IComponent)
 	static function createComponentsData(config:WorldConfig):ComponentTable {
-		var components:Array<Component<Dynamic>> = [];
+		var components:Array<IComponent> = [];
 		var maxTypeId = 0;
 		for(service in config._services) {
-			if(Std.is(service, Component)) {
-				var component:Component<Dynamic> = cast service;
+			if(Std.is(service, IComponent)) {
+				var component:IComponent = cast service;
 				components.push(component);
 				var typeId = component.__componentType().id;
 				if(typeId > maxTypeId) {

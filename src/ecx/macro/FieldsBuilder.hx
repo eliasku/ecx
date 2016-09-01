@@ -7,8 +7,15 @@ import haxe.macro.Expr;
 @:final
 class FieldsBuilder {
 
-    public static function push(fields:Array<Field>, block:Expr) {
-        var newFields = build(block);
+    public static function buildAndPush(fields:Array<Field>, block:Expr) {
+        pushFields(fields, build(block));
+    }
+
+    public static function appendMacroClass(fields:Array<Field>, typeDefinition:TypeDefinition) {
+        pushFields(fields, typeDefinition.fields);
+    }
+
+    public static function pushFields(fields:Array<Field>, newFields:Array<Field>) {
         for(newField in newFields) {
             fields.push(newField);
         }
@@ -16,7 +23,12 @@ class FieldsBuilder {
 
     public static function build(block:Expr):Array<Field> {
         var fields:Array<Field> = [];
-        var exprs:Array<Expr> = EnumTools.extract(block.expr, ExprDef.EBlock(x) => x);
+        var exprs = switch(block.expr) {
+            case ExprDef.EBlock(x): x;
+            case ExprDef.EFunction(_, _): [block];
+            case ExprDef.EVars(_): [block];
+            default: throw "Bad expression for building";
+        }
         var metas = [];
         for (expr in exprs) {
             switch (expr.expr) {

@@ -10,7 +10,7 @@ import haxe.macro.Expr;
 @:final
 class ClassMacroTools {
 
-	public static function componentType<T:Component<Dynamic>>(componentClass:ExprOf<Class<T>>):ExprOf<ComponentType> {
+	public static function componentType<T:IComponent>(componentClass:ExprOf<Class<T>>):ExprOf<ComponentType> {
 		return macro #if !ecx_macro_debug @:pos($v{componentClass.pos}) #end $componentClass.__COMPONENT;
 	}
 
@@ -22,7 +22,7 @@ class ClassMacroTools {
 		return macro #if !ecx_macro_debug @:pos($v{serviceClass.pos}) #end $serviceClass.__SPEC;
 	}
 
-	public static function componentTypeList<T:Component<Dynamic>>(componentClasses:Array<ExprOf<Class<T>>>):ExprOf<Array<ComponentType>> {
+	public static function componentTypeList<T:IComponent>(componentClasses:Array<ExprOf<Class<T>>>):ExprOf<Array<ComponentType>> {
 		var types = [ for(cls in componentClasses) componentType(cls) ];
 		return macro $a{types};
 	}

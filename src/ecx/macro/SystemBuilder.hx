@@ -115,7 +115,7 @@ class SystemBuilder {
 				$b{exprs}
 			}
 		}
-		FieldsBuilder.push(fields, injExpr);
+		FieldsBuilder.buildAndPush(fields, injExpr);
 	}
 }
 

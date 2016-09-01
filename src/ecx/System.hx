@@ -23,8 +23,7 @@ using ecx.macro.ClassMacroTools;
 #if !macro
 @:autoBuild(ecx.macro.SystemBuilder.build())
 #end
-@:base
-@:access(ecx.FamilyData)
+@:core
 class System extends Service {
 
 	@:unreflective
@@ -42,7 +41,7 @@ class System extends Service {
 	//@:unreflective
 	function onEntityRemoved(entity:Entity, family:FamilyData) {}
 
-	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<Component<Dynamic>>>>):ExprOf<EntityVector> {
+	macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<IComponent>>>):ExprOf<EntityVector> {
 		var componentTypes = requiredComponents.componentTypeList();
 		return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypes));
 	}

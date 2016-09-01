@@ -10,15 +10,12 @@ import ecx.types.ServiceType;
 #if !macro
 @:autoBuild(ecx.macro.ServiceBuilder.build())
 #end
-@:base
+@:core
 class Service {
 
 	var world(default, null):World;
 
 	function initialize() {}
-
-	@:extern inline static var __TYPE:ServiceType = ServiceType.INVALID;
-	@:extern inline static var __SPEC:ServiceSpec = ServiceSpec.INVALID;
 
 	function __serviceType():ServiceType {
 		return ServiceType.INVALID;

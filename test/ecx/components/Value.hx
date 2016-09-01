@@ -1,7 +1,5 @@
 package ecx.components;
 
-import ecx.storage.AutoComp;
-
 class Value extends AutoComp<ValueData> {}
 
 class ValueData {

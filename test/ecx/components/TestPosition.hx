@@ -1,7 +1,5 @@
 package ecx.components;
 
-import ecx.storage.AutoComp;
-
 class TestPosition extends AutoComp<TestPositionData> {}
 
 class TestPositionData {

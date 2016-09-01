@@ -1,5 +1,7 @@
 package ecx;
 
+import ecx.systems.DerivedTwoSystem;
+import ecx.systems.EmptySystem;
 import ecx.components.Value;
 import ecx.components.TestPosition;
 
@@ -17,7 +19,9 @@ class Environment {
 
 	public function new() {
 		var config = new WorldConfig();
+
 		config.add(new EmptySystem());
+		config.add(new DerivedTwoSystem());
 
 		config.add(new Value());
 		config.add(new TestPosition());

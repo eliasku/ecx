@@ -10,6 +10,8 @@ import haxe.macro.Type;
 @:final
 class ServiceBuilder {
 
+	public inline static var META_CORE:String = ":core";
+
 	public static function build():Array<Field> {
 		var cls:ClassType = Context.getLocalClass().get();
 		if(cls.isExtern) {
@@ -24,27 +26,29 @@ class ServiceBuilder {
 		var fields:Array<Field> = Context.getBuildFields();
 
 		var typeInfo = getTypeInfo(cls);
-		var typeBasePath = Context.makeExpr(typeInfo.basePath, pos);
-		var typePath = Context.makeExpr(typeInfo.path, pos);
-		var typeId = Context.makeExpr(typeInfo.typeId, pos);
-		var specId = Context.makeExpr(typeInfo.specId, pos);
+		if(typeInfo != null) {
+			var typeBasePath = Context.makeExpr(typeInfo.basePath, pos);
+			var typePath = Context.makeExpr(typeInfo.path, pos);
+			var typeId = Context.makeExpr(typeInfo.typeId, pos);
+			var specId = Context.makeExpr(typeInfo.specId, pos);
 
-		// TODO: cl & tp should be resolved from Type with Context
-		var tp:TypePath = { pack: cls.pack, name: cls.name, params: [], sub: null };
-		var ct:ComplexType = ComplexType.TPath(tp);
+			// TODO: cl & tp should be resolved from Type with Context
+			var tp:TypePath = { pack: cls.pack, name: cls.name, params: [], sub: null };
+			var ct:ComplexType = ComplexType.TPath(tp);
 
-		var tpType = getTypePathForType(false);
-		var tpSpec = getTypePathForType(true);
+			var tpType = getTypePathForType(false);
+			var tpSpec = getTypePathForType(true);
 
-		MacroBuildDebug.printSystem(typeInfo);
+			MacroBuildDebug.printSystem(typeInfo);
 
-		var fieldsExpr = macro {
-			function override_X__serviceType() { return new $tpType($typeId); }
-			function override_X__serviceSpec() { return new $tpSpec($specId); }
-			var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
-			var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
+			var fieldsExpr = macro {
+				function override_X__serviceType() { return new $tpType($typeId); }
+				function override_X__serviceSpec() { return new $tpSpec($specId); }
+				var public_Xstatic_Xinline_X__TYPE = new $tpType($typeId);
+				var public_Xstatic_Xinline_X__SPEC = new $tpSpec($specId);
+			}
+			FieldsBuilder.buildAndPush(fields, fieldsExpr);
 		}
-		FieldsBuilder.push(fields, fieldsExpr);
 
 		var injExprs:Array<Expr> = [];
 		addInjectors(fields, injExprs);
@@ -114,13 +118,17 @@ class ServiceBuilder {
 				$b{exprs}
 			}
 		}
-		FieldsBuilder.push(fields, injExpr);
+		FieldsBuilder.buildAndPush(fields, injExpr);
 	}
 
 	static function getTypeInfo(classType:ClassType):MacroServiceData {
+		if(classType.meta.has(META_CORE)) {
+			return null;
+		}
+
 		var baseClass = classType;
 		// Traverse up to the last non-component base
-		while(!MacroUtil.extendsBaseMeta(baseClass)) {
+		while(!MacroUtil.extendsMeta(baseClass, META_CORE)) {
 			baseClass = baseClass.superClass.t.get();
 		}
 

@@ -10,23 +10,10 @@ class ComponentBuilder {
 
 	public static function build():Array<Field> {
 		var cls:ClassType = Context.getLocalClass().get();
-
 		var pos = Context.currentPos();
 		var fields:Array<Field> = Context.getBuildFields();
-		var direct:Bool = false;
-		for(inter in cls.interfaces) {
-			// TODO: check pack
-			if(inter.t.get().name == "Component") {
-				direct = true;
-			}
-		}
-//		var ccc = switch(Context.getType("ecx.Component")) {
-//			case TInst(x, y):
-//				{t:x, params:y};
-//			default:
-//				throw "asda";
-//		}
-//		cls.interfaces.push(ccc);
+		var implementation:Bool = MacroUtil.hasInterface(cls, "ecx.IComponent");
+
 		var compData = getComponentData(cls);
 		if(compData == null) {
 			return null;
@@ -35,24 +22,21 @@ class ComponentBuilder {
 		MacroBuildDebug.printComponent(compData);
 		var typeId = Context.makeExpr(compData.typeId, pos);
 		var exprs = null;
-		if(direct) {
-			exprs = macro {
-				var public_Xstatic_Xinline_X__COMPONENT = new ecx.types.ComponentType($typeId);
-				function public_X__componentType() { return new ecx.types.ComponentType($typeId); }
-			}
+		if(implementation) {
+			exprs = macro function public_X__componentType() { return new ecx.types.ComponentType($typeId); };
 		}
 		else {
-			exprs = macro {
-				var public_Xstatic_Xinline_X__COMPONENT = new ecx.types.ComponentType($typeId);
-				function public_Xoverride_X__componentType() { return new ecx.types.ComponentType($typeId); }
-			}
+			exprs = macro function public_Xoverride_X__componentType() { return new ecx.types.ComponentType($typeId); };
 		}
-		FieldsBuilder.push(fields, exprs);
+		FieldsBuilder.buildAndPush(fields, exprs);
+
+		var componentExpr = macro var public_Xstatic_Xinline_X__COMPONENT = new ecx.types.ComponentType($typeId);
+		FieldsBuilder.buildAndPush(fields, componentExpr);
 		return fields;
 	}
 
 	static function getComponentData(classType:ClassType):MacroComponentData {
-		if(classType.meta.has(":base")) {
+		if(classType.meta.has(ServiceBuilder.META_CORE)) {
 			return null;
 		}
 
@@ -68,6 +52,9 @@ class ComponentBuilder {
 		MacroComponentCache.set(componentData);
 		return componentData;
 	}
+
+
+
 }
 
 #end
