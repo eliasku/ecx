@@ -19,7 +19,7 @@ abstract CBitArray(CInt32Array) {
     }
 
     inline public function disable(index:Int) {
-        this[address(index)] &= ~mask(index);
+        this[address(index)] &= ~(mask(index));
     }
 
     @:arrayAccess

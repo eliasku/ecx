@@ -54,8 +54,8 @@ class World {
 
 	var _families:CArray<FamilyData>;
 
-	var _changeList:Array<Entity> = [];
-	var _removeList:Array<Entity> = [];
+	var _changedVector:EntityVector;
+	var _removedVector:EntityVector;
 
 	var _pool:CInt32RingBuffer;
 
@@ -64,9 +64,9 @@ class World {
 
 	// Flags
 	var _aliveMask:CBitArray;
-	var _activeFlags:CBitArray;
-	var _changedFlags:CBitArray;
-	var _removedFlags:CBitArray;
+	var _activeMask:CBitArray;
+	var _changedMask:CBitArray;
+	var _removedMask:CBitArray;
 
 	function new(id:Int, config:WorldConfig, capacity:Int) {
 		this.id = id;
@@ -84,7 +84,7 @@ class World {
 	public function create():Entity {
 		var entity = allocNextEntity();
 		_aliveMask.enable(entity.id);
-		_activeFlags.enable(entity.id);
+		_activeMask.enable(entity.id);
 		return entity;
 	}
 
@@ -108,8 +108,8 @@ class World {
 		#if ecx_debug
 		guardEntity(entity);
 		#end
-		if(_removedFlags.enableIfNot(entity.id)) {
-			_removeList.push(entity);
+		if(_removedMask.enableIfNot(entity.id)) {
+			_removedVector.place(entity);
 		}
 	}
 
@@ -118,15 +118,10 @@ class World {
 		lockFamilies();
 		#end
 
-		if(_removeList.length > 0 || _changeList.length > 0) {
-			deleteEntities(_removeList);
-			changeEntities(_changeList);
-			for(family in _families) {
-				var entities:EntityVector = family.entities;
-				if(entities.changed) {
-					entities.invalidate();
-				}
-			}
+		if(_removedVector.length > 0 || _changedVector.length > 0) {
+			deleteEntities();
+			changeEntities();
+			updateFamilyVectors();
 		}
 
 		#if ecx_debug
@@ -138,18 +133,18 @@ class World {
 	public function activate(entity:Entity) {
 		#if ecx_debug
 		guardEntity(entity);
-		if(_activeFlags.get(entity.id)) throw 'This entity is already active';
+		if(_activeMask.get(entity.id)) throw 'This entity is already active';
 		#end
-		_activeFlags.enable(entity.id);
+		_activeMask.enable(entity.id);
 		_internal_entityChanged(entity);
 	}
 
 	public function deactivate(entity:Entity) {
 		#if ecx_debug
 		guardEntity(entity);
-		if(!_activeFlags.get(entity.id)) throw "This entity is already inactive";
+		if(!_activeMask.get(entity.id)) throw "This entity is already inactive";
 		#end
-		_activeFlags.disable(entity.id);
+		_activeMask.disable(entity.id);
 		_internal_entityChanged(entity);
 	}
 
@@ -162,7 +157,7 @@ class World {
 	}
 
 	inline public function isActive(entity:Entity):Bool {
-		return _activeFlags.get(entity.id);
+		return _activeMask.get(entity.id);
 	}
 
 	inline public function checkAlive(entity:Entity):Bool {
@@ -219,21 +214,23 @@ class World {
 		return capacity - used;
 	}
 
-	function deleteEntities(entities:Array<Entity>) {
-		var locPool:CInt32RingBuffer = _pool;
-		var locRemovedFlags = _removedFlags;
-		var locActiveFlags = _activeFlags;
+	@:access(ecx.types.FamilyData)
+	function deleteEntities() {
+		var entities = _removedVector;
+		var locPool = _pool;
+		var locRemovedFlags = _removedMask;
+		var locActiveFlags = _activeMask;
 		var locAliveMask = _aliveMask;
 		var families = _families;
 		var i = 0;
 		while(i < entities.length) {
 			var tail = entities.length;
 			while(i < tail) {
-				var entity = entities[i];
+				var entity = entities.get(i);
 
 				// Need to remove entities from families before deletion and notify systems
 				for(j in 0...families.length) {
-					@:privateAccess families.get(j)._internal_entityChanged(entity, false);
+					families.get(j).__disableEntity(entity);
 				}
 
 				clearComponents(entity);
@@ -246,32 +243,40 @@ class World {
 		}
 
 		var count = entities.length;
-		if(count > 0) {
-			used -= count;
-			#if ecx_debug
-			if(used < 0) throw "No way!";
-			#end
-			//if(startLength != removeList.length) throw "removing while removing";
-			entities.splice(0, count);
-		}
+		used -= count;
+		#if ecx_debug
+		if(used < 0) throw "No way!";
+		//if(startLength != removeList.length) throw "removing while removing";
+		#end
+		entities.reset();
 	}
 
-	function changeEntities(entities:Array<Entity>) {
-		var changedFlags = _changedFlags;
-		var activeFlags = _activeFlags;
+	@:access(ecx.types.FamilyData)
+	function changeEntities() {
+		var entities = _changedVector;
+		var changedFlags = _changedMask;
+		var activeFlags = _activeMask;
 		var aliveMask = _aliveMask;
 		var families = _families;
 		var startLength = entities.length;
+		var familiesTotal = families.length;
 		if(entities.length > 0) {
 			var i = 0;
 			var end = entities.length;
 			while (i < end) {
-				var entity = entities[i];
+				var entity = entities.get(i);
 				var alive = aliveMask.get(entity.id);
 				if(alive) {
 					var active = activeFlags.get(entity.id);
-					for(j in 0...families.length) {
-						@:privateAccess families.get(j)._internal_entityChanged(entity, active);
+					if(active) {
+						for(j in 0...familiesTotal) {
+							families.get(j).__enableEntity(entity);
+						}
+					}
+					else {
+						for(j in 0...familiesTotal) {
+							families.get(j).__disableEntity(entity);
+						}
 					}
 				}
 				changedFlags.disable(entity.id);
@@ -280,7 +285,16 @@ class World {
 			#if ecx_debug
 			if(startLength != entities.length) throw "update while updating";
 			#end
-			entities.splice(0, end);
+			entities.reset();
+		}
+	}
+
+	function updateFamilyVectors() {
+		for(i in 0..._families.length) {
+			var entities = _families.get(i).entities;
+			if(entities.changed) {
+				entities.invalidate();
+			}
 		}
 	}
 
@@ -288,8 +302,8 @@ class World {
 		#if ecx_debug
 		guardEntity(entity);
 		#end
-		if(_changedFlags.enableIfNot(entity.id)) {
-			_changeList.push(entity);
+		if(_changedMask.enableIfNot(entity.id)) {
+			_changedVector.place(entity);
 		}
 	}
 }

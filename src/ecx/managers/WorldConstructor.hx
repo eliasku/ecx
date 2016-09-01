@@ -1,5 +1,6 @@
 package ecx.managers;
 
+import ecx.types.EntityVector;
 import ecx.types.ComponentTable;
 import ecx.ds.CBitArray;
 import ecx.types.EntityData;
@@ -31,9 +32,12 @@ class WorldConstructor {
 		world._pool = createEntityPool(capacity);
 		world._mapToData = createEntityWrappers(world);
 		world._aliveMask = new CBitArray(capacity);
-		world._activeFlags = new CBitArray(capacity);
-		world._removedFlags = new CBitArray(capacity);
-		world._changedFlags = new CBitArray(capacity);
+		world._activeMask = new CBitArray(capacity);
+
+		world._changedVector = new EntityVector(capacity - 1);
+		world._removedVector = new EntityVector(capacity - 1);
+		world._changedMask = new CBitArray(capacity);
+		world._removedMask = new CBitArray(capacity);
 
 		// services
 		world._services = createServicesLookup(config);

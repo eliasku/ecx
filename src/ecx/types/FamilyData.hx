@@ -42,16 +42,15 @@ class FamilyData {
     }
 
     // TODO: check array of entities
+
     @:nonVirtual @:unreflective
-    function _internal_entityChanged(entity:Entity, active:Bool) {
+    function __enableEntity(entity:Entity) {
         #if ecx_debug
         if(_mutable == false) throw "IMMUTABLE";
         #end
-        var matched = active && check(entity);
-        var contained = _containedBits.get(entity.id);
-        if(matched && !contained) {
+        if(!_containedBits.get(entity.id) && check(entity)) {
             #if ecx_debug
-            if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
+            //if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
             #end
 
             _containedBits.enable(entity.id);
@@ -60,11 +59,19 @@ class FamilyData {
 
             #if ecx_debug
             if(!_containedBits.get(entity.id)) throw "Family flags assets: can't enable";
+            //if(!entities.__debugHas(entity)) throw 'ASSERT: Entity should be added to Family';
             #end
         }
-        else if(!matched && contained) {
+    }
+
+    @:nonVirtual @:unreflective
+    function __disableEntity(entity:Entity) {
+        #if ecx_debug
+        if(_mutable == false) throw "IMMUTABLE";
+        #end
+        if(_containedBits.get(entity.id)) {
             #if ecx_debug
-            if(!entities.__debugHas(entity)) throw "Family flags assets: id not found";
+            //if(!entities.__debugHas(entity)) throw "Family flags assets: id not found";
             #end
 
             _containedBits.disable(entity.id);
@@ -72,16 +79,10 @@ class FamilyData {
             _system.onEntityRemoved(entity, this);
 
             #if ecx_debug
-            if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
+            //if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
             if(_containedBits.get(entity.id)) throw "Family flags assets: can't disable";
             #end
         }
-
-        #if ecx_debug
-        if(active == false && entities.__debugHas(entity)) {
-            throw 'ASSERT: Family world not matched, but entity hasn`t been deleted (matched: $matched, contained: $contained)';
-        }
-        #end
     }
 
 #if ecx_debug
