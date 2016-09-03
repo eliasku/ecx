@@ -272,7 +272,7 @@ class World {
 					var active = activeFlags.get(entity.id);
 					if(active) {
 						for(j in 0...familiesTotal) {
-							families.get(j).__enableEntity(entity);
+							families.get(j).__change(entity);
 						}
 					}
 					else {

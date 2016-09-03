@@ -53,6 +53,16 @@ class FamilyData {
     // TODO: check array of entities
 
     @:nonVirtual @:unreflective
+    function __change(entity:Entity) {
+        var e = _containedMask.get(entity.id);
+        var c = check(entity);
+        if(c != e) {
+            if(c) __enableEntity(entity);
+            else __disableEntity(entity);
+        }
+    }
+
+    @:nonVirtual @:unreflective
     function __enableEntity(entity:Entity) {
         #if ecx_debug
         if(_mutable == false) throw "IMMUTABLE";
