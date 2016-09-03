@@ -6,24 +6,27 @@ import ecx.ds.CInt32Array;
 @:final @:unreflective @:dce
 class EntityVector {
 
-	inline static var TO_REMOVE:Int = 0x3FFFFFFF;
-
 	public var length(default, null):Int = 0;
 	public var buffer(default, null):CInt32Array;
-	public var bits(default, null):CBitArray;
-	public var changed(default, null):Bool = false;
 
 	inline public function new(initialCapacity:Int = 16) {
 		buffer = new CInt32Array(initialCapacity);
 	}
 
-	public function place(entity:Entity) {
-		if (length >= buffer.length) {
-			grow();
+	inline public function ensure(maxLength:Int) {
+		if (maxLength >= buffer.length) {
+			grow(maxLength);
 		}
+	}
+
+	inline public function push(entity:Entity) {
+		ensure(length);
+		place(entity);
+	}
+
+	inline public function place(entity:Entity) {
 		buffer[length] = entity.id;
 		++length;
-		changed = true;
 	}
 
 	@:access(ecx.Entity)
@@ -31,48 +34,39 @@ class EntityVector {
 		return new Entity(buffer[index]);
 	}
 
-	public function delete(entity:Entity) {
-		// TODO: mod bin search
-		for (i in 0...length) {
-			if (buffer[i] == entity.id) {
-				buffer[i] = TO_REMOVE;
-				changed = true;
-				return;
+	public function restoreOrder(mask:CBitArray, startIndex:Int = 0, endIndex:Int = 0) {
+		var array:CInt32Array = cast mask;
+		var begin = Std.int(startIndex / CBitArray.BITS_PER_ELEMENT);
+		var end = endIndex == 0 ? array.length : Math.ceil(endIndex / CBitArray.BITS_PER_ELEMENT);
+		var at = 0;
+		for(i in begin...end) {
+			var value = array[i];
+			if(value != 0) {
+				var index = i << CBitArray.BIT_SHIFT;
+				for(j in 0...CBitArray.BITS_PER_ELEMENT) {
+					if((value & (1 << j)) != 0) {
+						buffer[at] = index + j;
+						++at;
+					}
+				}
 			}
 		}
-	}
-
-	public function invalidate() {
-		for (i in 1...length) {
-			var tmp = buffer[i];
-			var j = i;
-			while(j > 0 && tmp < buffer[j - 1]) {
-				buffer[j] = buffer[j - 1];
-				--j;
-			}
-			buffer[j] = tmp;
-		}
-
-		var c = length - 1;
-		while(c >= 0 && buffer[c] == TO_REMOVE) {
-			--c;
-		}
-		length = c + 1;
-		changed = false;
+		length = at;
 	}
 
 	inline public function reset() {
 		length = 0;
-		changed = false;
 	}
 
 	inline public function iterator():EntityMultiSetIterator {
 		return new EntityMultiSetIterator(this);
 	}
 
-	function grow() {
+	function grow(newLength:Int) {
 		var data = buffer;
-		buffer = new CInt32Array(Std.int(data.length * 1.5 + 1.0));
+		// TODO: new size with current length (increase steps)
+		var newSize = Std.int(newLength * 1.5 + 1.0);
+		buffer = new CInt32Array(newSize);
 		for (i in 0...length) {
 			buffer[i] = data[i];
 		}

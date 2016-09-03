@@ -1,11 +1,10 @@
 package ecx.macro;
 
-import ecx.macro.MacroUtil;
 import ecx.macro.FieldsBuilder;
 import ecx.macro.MacroUtil;
-import haxe.macro.Type;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.macro.Type;
 
 typedef Nameble = {
 	var name: String;

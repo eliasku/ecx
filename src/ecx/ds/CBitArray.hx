@@ -5,8 +5,12 @@ package ecx.ds;
 @:dce
 abstract CBitArray(CInt32Array) {
 
+    inline public static var BITS_PER_ELEMENT:Int = 32;
+    inline public static var BIT_SHIFT:Int = 5;
+    inline public static var BIT_MASK:Int = 0x1F;
+
     inline public function new(count:Int) {
-        this = new CInt32Array(Math.ceil(count / 32));
+        this = new CInt32Array(Math.ceil(count / BITS_PER_ELEMENT));
         #if neko
         for(i in 0...this.length) {
             this[i] = 0;
@@ -49,12 +53,12 @@ abstract CBitArray(CInt32Array) {
 
     //@:pure
     inline public static function address(index:Int):Int {
-        return index >>> 5;
+        return index >>> BIT_SHIFT;
     }
 
     // TODO: critical analyzer exception here
     //@:pure
     inline public static function mask(index:Int):Int {
-        return 0x1 << (index & 0x1F);
+        return 0x1 << (index & BIT_MASK);
     }
 }

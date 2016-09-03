@@ -1,17 +1,16 @@
 package ecx;
 
-import ecx.macro.MacroUtil;
-import ecx.types.EntityVector;
-import ecx.types.ComponentTable;
-import ecx.ds.CArrayIterator;
-import ecx.ds.CInt32RingBuffer;
-import ecx.managers.WorldConstructor;
-import ecx.types.FamilyData;
-import ecx.types.EntityData;
 import ecx.ds.CArray;
-import ecx.ds.Cast;
+import ecx.ds.CArrayIterator;
 import ecx.ds.CBitArray;
+import ecx.ds.CInt32RingBuffer;
+import ecx.ds.Cast;
 import ecx.macro.ClassMacroTools;
+import ecx.managers.WorldConstructor;
+import ecx.types.ComponentTable;
+import ecx.types.EntityData;
+import ecx.types.EntityVector;
+import ecx.types.FamilyData;
 import haxe.macro.Expr.ExprOf;
 
 #if ecx_debug
@@ -183,7 +182,10 @@ class World {
 	public function clearComponents(entity:Entity) {
 		var componentsData = components;
 		for(typeId in 0...componentsData.length) {
-			componentsData[typeId].remove(entity);
+			var component = componentsData[typeId];
+			if(component.has(entity)) {
+				componentsData[typeId].remove(entity);
+			}
 		}
 		if(isActive(entity)) {
 			_internal_entityChanged(entity);
@@ -289,11 +291,12 @@ class World {
 		}
 	}
 
+	@:access(ecx.types.FamilyData)
 	function updateFamilyVectors() {
 		for(i in 0..._families.length) {
-			var entities = _families.get(i).entities;
-			if(entities.changed) {
-				entities.invalidate();
+			var family = _families.get(i);
+			if(family.changed) {
+				family.__invalidate();
 			}
 		}
 	}

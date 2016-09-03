@@ -10,15 +10,17 @@ import ecx.ds.CBitArray;
 class FamilyData {
 
     public var entities(default, null):EntityVector;
+    public var changed(default, null):Bool = false;
+    public var total(default, null):Int = 0;
 
-    var _containedBits:CBitArray;
+    var _containedMask:CBitArray;
     var _requiredComponents:ComponentTable;
     var _system:System;
 
     function new(system:System) {
         var capacity = system.world.capacity;
         entities = new EntityVector();
-        _containedBits = new CBitArray(capacity);
+        _containedMask = new CBitArray(capacity);
         _system = system;
     }
 
@@ -41,6 +43,13 @@ class FamilyData {
         return true;
     }
 
+    @:nonVirtual @:unreflective
+    inline function __invalidate() {
+        entities.ensure(total);
+        entities.restoreOrder(_containedMask);
+        changed = false;
+    }
+
     // TODO: check array of entities
 
     @:nonVirtual @:unreflective
@@ -48,17 +57,18 @@ class FamilyData {
         #if ecx_debug
         if(_mutable == false) throw "IMMUTABLE";
         #end
-        if(!_containedBits.get(entity.id) && check(entity)) {
+        if(!_containedMask.get(entity.id) && check(entity)) {
             #if ecx_debug
             //if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
             #end
 
-            _containedBits.enable(entity.id);
-            entities.place(entity);
+            _containedMask.enable(entity.id);
             _system.onEntityAdded(entity, this);
+            changed = true;
+            ++total;
 
             #if ecx_debug
-            if(!_containedBits.get(entity.id)) throw "Family flags assets: can't enable";
+            if(!_containedMask.get(entity.id)) throw "Family flags assets: can't enable";
             //if(!entities.__debugHas(entity)) throw 'ASSERT: Entity should be added to Family';
             #end
         }
@@ -69,18 +79,19 @@ class FamilyData {
         #if ecx_debug
         if(_mutable == false) throw "IMMUTABLE";
         #end
-        if(_containedBits.get(entity.id)) {
+        if(_containedMask.get(entity.id)) {
             #if ecx_debug
             //if(!entities.__debugHas(entity)) throw "Family flags assets: id not found";
             #end
 
-            _containedBits.disable(entity.id);
-            entities.delete(entity);
+            _containedMask.disable(entity.id);
             _system.onEntityRemoved(entity, this);
+            changed = true;
+            --total;
 
             #if ecx_debug
             //if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
-            if(_containedBits.get(entity.id)) throw "Family flags assets: can't disable";
+            if(_containedMask.get(entity.id)) throw "Family flags assets: can't disable";
             #end
         }
     }
