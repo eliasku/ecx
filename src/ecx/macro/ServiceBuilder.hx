@@ -70,7 +70,7 @@ class ServiceBuilder {
 		var injectType:Array<String> = [];
 		for(field in fields) {
 			switch(field.kind) {
-				case FieldType.FVar(t, _):
+				case FieldType.FVar(t, _) | FieldType.FProp(_, _, t, _):
 					if(t != null) {
 						switch(t) {
 							case ComplexType.TPath(tp):

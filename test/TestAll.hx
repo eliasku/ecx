@@ -1,13 +1,14 @@
 package ;
 
-import ecx.ServiceHierarchyTest;
-import ecx.MapToTest;
-import ecx.IssuesTest;
-import ecx.WorldTest;
 import ecx.ComponentTest;
 import ecx.EntityTest;
-import utest.TestResult;
+import ecx.FamilyTest;
+import ecx.IssuesTest;
+import ecx.MapToTest;
+import ecx.ServiceHierarchyTest;
+import ecx.WorldTest;
 import utest.Runner;
+import utest.TestResult;
 import utest.ui.Report;
 
 class TestAll {
@@ -24,7 +25,7 @@ class TestAll {
 		runner.addCase(new MapToTest());
 		runner.addCase(new IssuesTest());
 		runner.addCase(new ServiceHierarchyTest());
-//		runner.addCase(new ecx.concept.test.ConceptTest());
+		runner.addCase(new FamilyTest());
 	}
 
 	static function run(runner:Runner) {
@@ -51,7 +52,7 @@ class TestAll {
 	}
 
 	static function isAllOk(result:TestResult):Bool {
-		for(l in result.assertations) {
+		for (l in result.assertations) {
 			switch (l){
 				case Success(_):
 				default: return false;

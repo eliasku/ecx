@@ -1,6 +1,6 @@
 package ecx;
 
-import ecx.components.TestPosition;
+import ecx.components.Position;
 import ecx.components.Value;
 import utest.Assert;
 
@@ -20,7 +20,7 @@ class IssuesTest extends EcxTest {
 		value.get(entity).value = 1;
 		Assert.equals(1, value.get(entity).value);
 
-		var testPosition:TestPosition = world.resolve(TestPosition);
+		var testPosition:Position = world.resolve(Position);
 		Assert.isNull(testPosition.get(entity));
 	}
 
@@ -40,27 +40,25 @@ class IssuesTest extends EcxTest {
 	public function testComponentsTraversal() {
 		var e = world.create();
 		var value:Value = world.resolve(Value);
-		var testPosition:TestPosition = world.resolve(TestPosition);
+		var position:Position = world.resolve(Position);
 
 		value.create(e);
-		testPosition.create(e);
+		position.create(e);
 
-		var keys = [];
 		var values = [];
 		var components = world.components;
 		for(key in 0...components.length) {
-			keys.push(key);
 			var value = components[key].has(e);
-			values.push(value);
-			trace(key + ": " + value);
+			if(value) {
+				values.push(value);
+			}
 		}
-		Assert.equals(2, keys.length);
 		Assert.equals(2, values.length);
 	}
 
 	public function testGetMacro() {
 		var value:Value = world.resolve(Value);
-		var testPosition:TestPosition = world.resolve(TestPosition);
+		var testPosition:Position = world.resolve(Position);
 		var expectedEntitiesCount:Int = world.used;
 
 		// entity need to be created once!

@@ -2,8 +2,10 @@ package ecx;
 
 import ecx.systems.DerivedTwoSystem;
 import ecx.systems.EmptySystem;
+import ecx.systems.MotionSystem;
+import ecx.components.Motion;
 import ecx.components.Value;
-import ecx.components.TestPosition;
+import ecx.components.Position;
 
 class Environment {
 	static var _current:Environment;
@@ -22,9 +24,12 @@ class Environment {
 
 		config.add(new EmptySystem());
 		config.add(new DerivedTwoSystem());
+		config.add(new MotionSystem());
 
 		config.add(new Value());
-		config.add(new TestPosition());
+		config.add(new Motion());
+		config.add(new Position());
+
 		world = Engine.createWorld(config, 1000);
 	}
 }

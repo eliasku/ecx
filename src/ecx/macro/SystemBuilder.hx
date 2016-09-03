@@ -47,7 +47,7 @@ class SystemBuilder {
 		var hasUpdate:Bool = false;
 		for(field in fields) {
 			switch(field.kind) {
-				case FieldType.FVar(t, e):
+				case FieldType.FVar(t, e) | FieldType.FProp(_, _, t, e):
 					switch(t) {
 						case ComplexType.TPath(tp):
 							if(tp.name == "Family") {
