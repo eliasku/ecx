@@ -14,7 +14,7 @@ matrix:
 
 branches:
   only:
-    - master
+    - develop
 
 install:
   - cinst haxe -version 3.2.1 -y

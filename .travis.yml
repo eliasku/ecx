@@ -13,7 +13,7 @@ haxe:
 
 branches:
   only:
-    - master
+    - develop
 
 env:
     matrix:
