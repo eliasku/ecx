@@ -122,6 +122,5 @@ Use `-D ecx_macro_debug` for macro debugging
 - Rethink system-flags
 - Delete configurator services
 - Add more information on specific cases of AutoComp<T>
-- Pack<T> for dense storages
+- Pack<T> for dense storage
 - Entity Generations
-- Family entity vector count-sort by bit-array in the worst case?
