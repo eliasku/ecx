@@ -5,7 +5,7 @@ package ecx;
     - `0` entity id is reserved as INVALID
     - Components slot `0` could be used for storing internal information
 **/
-@:dce @:final @:unreflective
+@:dce @:final @:unreflective @:notNull
 abstract Entity(Int) {
 
 	/**

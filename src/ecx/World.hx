@@ -100,6 +100,7 @@ class World {
 		for(typeId in 0...componentsByType.length) {
 			componentsByType[typeId].copy(source, entity);
 		}
+		commit(entity);
 		return entity;
 	}
 

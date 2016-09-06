@@ -142,30 +142,39 @@ class AutoCompBuilder {
 		// TODO: iterface clone?
 		// TODO: value-type assignments
 		var hasCopyFrom:Bool = false;
+		var hasCreateInstance:Bool = false;
 		switch(type) {
 			case TInst(_.get() => x, _):
 				var dataClass:ClassType = x;
 				var dataFields = dataClass.fields.get();
-				hasCopyFrom = MacroUtil.hasMethodInClassFields(dataFields, "copyFrom");
 				if (dataClass.isInterface) {
-					// TODO: check clone method
-					hasCopyFrom = false;
-#if ecx_debug
-					trace("copy for interface is not supported now");
-#end
+					hasCreateInstance = MacroUtil.hasMethodInClassFields(dataFields, "instantiate");
 				}
+				hasCopyFrom = MacroUtil.hasMethodInClassFields(dataFields, "copyFrom");
 			default:
 		}
 
 		if(values.primitive) {
-			FieldsBuilder.appendMacroClass(fields, macro class Copy {
+			FieldsBuilder.appendMacroClass(fields, macro class CopyValue {
 				inline override public function copy(source:ecx.Entity, destination:ecx.Entity) {
 					set(destination, get(source));
 				}
 			});
 		}
+		else if (hasCreateInstance && hasCopyFrom) {
+			FieldsBuilder.appendMacroClass(fields, macro class CopyInstance {
+				inline override public function copy(source:ecx.Entity, destination:ecx.Entity) {
+					var data = get(source);
+					if(data != null) {
+						var newInstance = data.instantiate();
+						newInstance.copyFrom(data);
+						set(destination, newInstance);
+					}
+				}
+			});
+		}
 		else if (hasCopyFrom) {
-			FieldsBuilder.appendMacroClass(fields, macro class Copy {
+			FieldsBuilder.appendMacroClass(fields, macro class Clone {
 				inline override public function copy(source:ecx.Entity, destination:ecx.Entity) {
 					var data = get(source);
 					if(data != null) {
