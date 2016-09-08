@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.types.ComponentType;
 import ecx.types.ComponentTable;
 import ecx.ds.CArray;
 import ecx.ds.CArrayIterator;
@@ -91,6 +92,13 @@ class World {
 			var tmp = @:privateAccess $self._services[$serviceType.id];
 			ecx.ds.Cast.unsafe(tmp, $serviceClass);
 		};
+	}
+
+	/**
+		Resolve `IComponent` service by run-time `ComponentType`
+	**/
+	inline public function getComponentService(componentType:ComponentType):IComponent {
+		return _components[componentType.id];
 	}
 
 	/**
@@ -240,6 +248,14 @@ class World {
 	/** Iterator for *active* systems ordered by priority **/
 	inline public function systems():CArrayIterator<System> {
 		return new CArrayIterator<System>(_systems);
+	}
+
+	/**
+		Iterator for components table
+		Component could be null (should be fixed later)
+	**/
+	inline public function components():CArrayIterator<IComponent> {
+		return new CArrayIterator<IComponent>(_components);
 	}
 
 	/**

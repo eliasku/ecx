@@ -37,7 +37,7 @@ class System extends Service {
 
     macro function _family(self:ExprOf<System>, requiredComponents:Array<ExprOf<Class<IComponent>>>):ExprOf<EntityVector> {
         var componentTypes = requiredComponents.componentTypeList();
-        return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData($self).require($componentTypes));
+        return macro $self._addFamily(@:privateAccess new ecx.types.FamilyData(world, $self).require($componentTypes));
     }
 
     function __configure() {}

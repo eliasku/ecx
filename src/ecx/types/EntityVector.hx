@@ -58,8 +58,8 @@ class EntityVector {
 		length = 0;
 	}
 
-	inline public function iterator():EntityMultiSetIterator {
-		return new EntityMultiSetIterator(this);
+	inline public function iterator():EntityVectorIterator {
+		return new EntityVectorIterator(this);
 	}
 
 	public function getObjectSize():Int {
@@ -83,7 +83,7 @@ class EntityVector {
 }
 
 @:final @:unreflective @:dce
-class EntityMultiSetIterator {
+class EntityVectorIterator {
 
 	public var index:Int;
 	public var end:Int;

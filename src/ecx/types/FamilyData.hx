@@ -6,7 +6,6 @@ import ecx.ds.CBitArray;
 @:final
 @:keep
 @:unreflective
-@:access(ecx.System)
 class FamilyData {
 
     public var entities(default, null):EntityVector;
@@ -15,20 +14,22 @@ class FamilyData {
 
     var _containedMask:CBitArray;
     var _requiredComponents:ComponentTable;
+    // TODO: should be systems array to notify
     var _system:System;
+    var _world:World;
 
-    function new(system:System) {
-        var capacity = system.world.capacity;
+    function new(world:World, system:System) {
+        var capacity = world.capacity;
         entities = new EntityVector();
         _containedMask = new CBitArray(capacity);
+        _world = world;
         _system = system;
     }
 
-    @:access(ecx.World)
     inline function require(requiredComponentTypes:Array<ComponentType>):FamilyData {
         _requiredComponents = new CArray(requiredComponentTypes != null ? requiredComponentTypes.length : 0);
         for(i in 0..._requiredComponents.length) {
-            _requiredComponents[i] = _system.world._components[requiredComponentTypes[i].id];
+            _requiredComponents[i] = _world.getComponentService(requiredComponentTypes[i]);
         }
         return this;
     }
@@ -64,6 +65,7 @@ class FamilyData {
     }
 
     @:nonVirtual @:unreflective
+    @:access(ecx.System)
     function __enableEntity(entity:Entity) {
         #if ecx_debug
         if(_mutable == false) throw "IMMUTABLE";
@@ -77,6 +79,7 @@ class FamilyData {
     }
 
     @:nonVirtual @:unreflective
+    @:access(ecx.System)
     function __disableEntity(entity:Entity) {
         #if ecx_debug
         if(_mutable == false) throw "IMMUTABLE";
