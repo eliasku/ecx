@@ -40,6 +40,10 @@ class CInt32RingBuffer {
         _tail = placeAt & _mask;
     }
 
+    public function getObjectSize():Int {
+        return _buffer.getObjectSize() + 16;
+    }
+
     inline function get_length() {
         return _buffer.length;
     }

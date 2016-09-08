@@ -24,10 +24,11 @@ class FamilyData {
         _system = system;
     }
 
+    @:access(ecx.World)
     inline function require(requiredComponentTypes:Array<ComponentType>):FamilyData {
         _requiredComponents = new CArray(requiredComponentTypes != null ? requiredComponentTypes.length : 0);
         for(i in 0..._requiredComponents.length) {
-            _requiredComponents[i] = _system.world.components[requiredComponentTypes[i].id];
+            _requiredComponents[i] = _system.world._components[requiredComponentTypes[i].id];
         }
         return this;
     }
@@ -68,19 +69,10 @@ class FamilyData {
         if(_mutable == false) throw "IMMUTABLE";
         #end
         if(!_containedMask.get(entity.id) && check(entity)) {
-            #if ecx_debug
-            //if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
-            #end
-
             _containedMask.enable(entity.id);
             _system.onEntityAdded(entity, this);
             changed = true;
             ++total;
-
-            #if ecx_debug
-            if(!_containedMask.get(entity.id)) throw "Family flags assets: can't enable";
-            //if(!entities.__debugHas(entity)) throw 'ASSERT: Entity should be added to Family';
-            #end
         }
     }
 
@@ -90,19 +82,10 @@ class FamilyData {
         if(_mutable == false) throw "IMMUTABLE";
         #end
         if(_containedMask.get(entity.id)) {
-            #if ecx_debug
-            //if(!entities.__debugHas(entity)) throw "Family flags assets: id not found";
-            #end
-
             _containedMask.disable(entity.id);
             _system.onEntityRemoved(entity, this);
             changed = true;
             --total;
-
-            #if ecx_debug
-            //if(entities.__debugHas(entity)) throw "Family flags assets: id duplicated";
-            if(_containedMask.get(entity.id)) throw "Family flags assets: can't disable";
-            #end
         }
     }
 

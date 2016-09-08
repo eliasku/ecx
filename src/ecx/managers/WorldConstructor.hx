@@ -26,7 +26,7 @@ class WorldConstructor {
 		world.capacity = capacity;
 
 		// components table
-		world.components = createComponentsData(config);
+		world._components = createComponentsData(config);
 
 		// entities support
 		world._pool = createEntityPool(capacity);
@@ -178,11 +178,5 @@ class WorldConstructor {
 		value |= value >> 8;
 		value |= value >> 16;
 		return value + 1;
-	}
-
-	// TODO: mem usage calculator
-	public static function calculateMemoryUsage(capacity:Int, components:Int, families:Int) {
-		var min = 0;
-		return min;
 	}
 }

@@ -55,13 +55,12 @@ abstract CBitArray(CInt32Array) {
         return this.length << 2;
     }
 
-    //@:pure
+    // TODO: @:pure after haxe 3.3.0 release
     inline public static function address(index:Int):Int {
         return index >>> BIT_SHIFT;
     }
 
-    // TODO: critical analyzer exception here
-    //@:pure
+    // TODO: @:pure after haxe 3.3.0 release
     inline public static function mask(index:Int):Int {
         return 0x1 << (index & BIT_MASK);
     }

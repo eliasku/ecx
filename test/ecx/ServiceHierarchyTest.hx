@@ -15,8 +15,8 @@ class ServiceHierarchyTest extends EcxTest {
 	}
 
 	public function testResolve() {
-		var base = world.resolve(BaseSystem);
-		var derivedTwo = world.resolve(DerivedTwoSystem);
+		var base:BaseSystem = world.resolve(BaseSystem);
+		var derivedTwo:DerivedTwoSystem = world.resolve(DerivedTwoSystem);
 		Assert.notNull(base);
 		Assert.notNull(derivedTwo);
 		Assert.isTrue(base == derivedTwo);

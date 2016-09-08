@@ -69,8 +69,10 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 		return new CArrayIterator<T>(this);
 	}
 
+	/**
+		Theoretic memory size consumed by array, references are not included
+	**/
 	inline public function getObjectSize():Int {
-		// TODO: document that it's not include referenced elements
 		return length << 2;
 	}
 

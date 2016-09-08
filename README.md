@@ -11,6 +11,7 @@
 ECX is Entity Component System framework for Haxe
 
 - [Asteroids Example](https://github.com/eliasku/ecx-richardlord-asteroids)
+- [Documentation](https://eliasku.github.io/ecx/api-minimal)
 - [Benchmarks](https://github.com/eliasku/ecx-benchmarks)
 
 Libraries (work in progress):

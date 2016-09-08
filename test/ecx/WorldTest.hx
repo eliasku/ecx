@@ -14,6 +14,5 @@ class WorldTest extends EcxTest {
 
 	public function testInitialize() {
 		Assert.notNull(world);
-		Assert.notNull(world.components);
 	}
 }

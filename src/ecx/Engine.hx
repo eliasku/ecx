@@ -32,6 +32,17 @@ class Engine {
 		return _worlds[index];
 	}
 
+	/**
+		Theoretic memory consuming in bytes
+	**/
+	public function getObjectSize():Int {
+		var total = 0;
+		for(world in _worlds) {
+			total += world.getObjectSize();
+		}
+		return total;
+	}
+
 	static var _worlds:Array<World> = [];
 	static var _types:TypeManager;
 

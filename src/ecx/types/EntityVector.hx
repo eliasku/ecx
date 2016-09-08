@@ -66,27 +66,20 @@ class EntityVector {
 		return buffer.getObjectSize() + 4;
 	}
 
-	function grow(newLength:Int) {
-		var data = buffer;
-		// TODO: new size with current length (increase steps)
-		var newSize = Std.int(newLength * 1.5 + 1.0);
-		buffer = new CInt32Array(newSize);
-		for (i in 0...length) {
-			buffer[i] = data[i];
+	function grow(requiredLength:Int) {
+		var prevBuffer = buffer;
+		var newLength = prevBuffer.length;
+		while(newLength < requiredLength) {
+			newLength = Std.int(1.0 + newLength * 1.5);
 		}
-	}
-
-#if ecx_debug
-	public function __debugHas(entity:Entity):Bool {
-		// TODO: mod bin search
-		for(i in 0...length) {
-			if(buffer[i] == entity.id) {
-				return true;
+		if(newLength > prevBuffer.length) {
+			buffer = new CInt32Array(newLength);
+			// copy only used entities
+			for (i in 0...length) {
+				buffer[i] = prevBuffer[i];
 			}
 		}
-		return false;
 	}
-#end
 }
 
 @:final @:unreflective @:dce

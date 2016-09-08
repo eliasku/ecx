@@ -1,5 +1,6 @@
 package ecx;
 
+import ecx.types.ComponentTable;
 import ecx.ds.CArray;
 import ecx.ds.CArrayIterator;
 import ecx.ds.CBitArray;
@@ -7,7 +8,6 @@ import ecx.ds.CInt32RingBuffer;
 import ecx.ds.Cast;
 import ecx.macro.ClassMacroTools;
 import ecx.managers.WorldConstructor;
-import ecx.types.ComponentTable;
 import ecx.types.EntityData;
 import ecx.types.EntityVector;
 import ecx.types.FamilyData;
@@ -17,15 +17,12 @@ import haxe.macro.Expr.ExprOf;
 using ecx.managers.WorldDebug;
 #end
 
+/**
+	World manages entities, components and services
+**/
 @:final @:dce @:unreflective
 @:access(ecx.System, ecx.Family, ecx.Entity)
 class World {
-
-	/**
-		Component table.
-	**/
-	// TODO: make it private?
-	public var components(default, null):ComponentTable;
 
 	/**
 		Identifier of this world
@@ -47,6 +44,9 @@ class World {
 
 	/** Count of available entities in pool **/
 	public var available(get, never):Int;
+
+	// components
+	var _components:ComponentTable;
 
 	// lookup for all systems
 	var _services:CArray<Service>;
@@ -118,7 +118,7 @@ class World {
 	**/
 	public function clone(source:Entity):Entity {
 		var entity = create();
-		var componentsByType = components;
+		var componentsByType = _components;
 		for(typeId in 0...componentsByType.length) {
 			componentsByType[typeId].copy(source, entity);
 		}
@@ -216,7 +216,7 @@ class World {
 		Destroy all components attached to `entity`
 	**/
 	public function destroyComponents(entity:Entity) {
-		var componentsData = components;
+		var componentsData = _components;
 		for(typeId in 0...componentsData.length) {
 			var component = componentsData[typeId];
 			if(component.has(entity)) {
@@ -240,6 +240,33 @@ class World {
 	/** Iterator for *active* systems ordered by priority **/
 	inline public function systems():CArrayIterator<System> {
 		return new CArrayIterator<System>(_systems);
+	}
+
+	/**
+		Theoretic memory consuming in bytes
+	**/
+	public function getObjectSize():Int {
+		var total = _services.getObjectSize();
+		total += _orderedServices.getObjectSize();
+		total += _systems.getObjectSize();
+		total += _processors.getObjectSize();
+		total += _families.getObjectSize();
+		total += _changedVector.getObjectSize();
+		total += _removedVector.getObjectSize();
+		total += _pool.getObjectSize();
+		total += _aliveMask.getObjectSize();
+		total += _activeMask.getObjectSize();
+		total += _changedMask.getObjectSize();
+		total += _removedMask.getObjectSize();
+
+		for(i in 0..._components.length) {
+			var component = _components.get(i);
+			if(component != null) {
+				total += component.getObjectSize();
+			}
+		}
+
+		return total;
 	}
 
 	function allocNextEntity():Entity {

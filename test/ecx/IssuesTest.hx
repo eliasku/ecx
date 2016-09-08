@@ -46,7 +46,7 @@ class IssuesTest extends EcxTest {
 		position.create(e);
 
 		var values = [];
-		var components = world.components;
+		var components = @:privateAccess world._components;
 		for(key in 0...components.length) {
 			var value = components[key].has(e);
 			if(value) {
