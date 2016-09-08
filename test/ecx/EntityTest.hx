@@ -20,8 +20,8 @@ class EntityTest extends EcxTest {
 		var e = world.create();
 		var inactiveEntity = world.createPassive();
 
-		Assert.isTrue(e.isValid);
-		Assert.isTrue(inactiveEntity.isValid);
+		Assert.isTrue(e.notNull());
+		Assert.isTrue(inactiveEntity.notNull());
 
 		Assert.isTrue(world.checkAlive(e));
 		Assert.isTrue(world.checkAlive(inactiveEntity));
@@ -29,8 +29,8 @@ class EntityTest extends EcxTest {
 		Assert.isTrue(world.isActive(e));
 		Assert.isFalse(world.isActive(inactiveEntity));
 
-		world.delete(e);
-		world.delete(inactiveEntity);
+		world.destroy(e);
+		world.destroy(inactiveEntity);
 
 		world.invalidate();
 

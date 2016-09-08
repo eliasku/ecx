@@ -8,18 +8,12 @@ import haxe.macro.Expr;
 using ecx.macro.ClassMacroTools;
 
 /**
-	Service-based system type. System unify world-scope Context or Behaviour
+	System is Service which need to update.
+	System's priority will be defined in `WorldConfig`.
+	Has ability to define aspects `Family<...>` for oredered entity sets
 
-	Initialization steps:
-	- all systems are constructed via world-configuration
-	- all systems are wired with each other
-	- all systems are initialized
-	- systems are able to be updated (if not IDLE)
-
-	@see ecx.Wire
 	@see ecx.Family
 **/
-
 #if !macro
 @:autoBuild(ecx.macro.SystemBuilder.build())
 #end

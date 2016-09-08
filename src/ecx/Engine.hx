@@ -10,18 +10,16 @@ import ecx.types.TypeManager;
 @:access(ecx.World)
 class Engine {
 
-	/**
-		Types information
-	**/
+	/** Types information **/
 	public static var types(get, never):TypeManager;
 
-	/**
-		Total worlds allocated
-	**/
+	/** Total worlds allocated **/
 	public static var worldsTotal(get, never):Int;
 
 	/**
-		Create new world
+		Create new world.
+		`config` is required.
+		`capacity` is max count of entities.
 	**/
 	public static function createWorld(config:WorldConfig, capacity:Int = 0x10000):World {
 		var world = new World(_worlds.length, config, capacity);
@@ -29,9 +27,7 @@ class Engine {
 		return world;
 	}
 
-	/**
-		Get world by index
-	**/
+	/** Get world by `index` **/
 	inline public static function getWorld(index:Int):World {
 		return _worlds[index];
 	}

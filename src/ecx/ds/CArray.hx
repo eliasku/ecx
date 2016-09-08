@@ -69,6 +69,11 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 		return new CArrayIterator<T>(this);
 	}
 
+	inline public function getObjectSize():Int {
+		// TODO: document that it's not include referenced elements
+		return length << 2;
+	}
+
 	inline public static function fromArray<T>(array:Array<T>):CArray<T> {
 		#if (cpp||python)
 		return array.copy();

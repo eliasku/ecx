@@ -9,5 +9,3 @@
 --next
 -cmd haxelib run dox -i bin/ecx.xml -o bin/api-minimal --toplevel-package ecx
 -cmd nekotools server -d bin/api-minimal
-
-

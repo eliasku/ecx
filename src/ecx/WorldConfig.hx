@@ -1,19 +1,37 @@
 package ecx;
 
+/**
+	Config for `World` instantiation.
+	Extend this class to create your own "Plugins"
+**/
 @:unreflective
 class WorldConfig {
 
 	var _services:Array<Service> = [];
 	var _priorities:Array<Int> = [];
 
+	/**
+		Create `WorldConfig`.
+		Optional `dependencies` could require array of "Plugins" to include
+	**/
 	public function new(dependencies:Array<WorldConfig> = null) {
 		if(dependencies != null) {
 			for(dependency in dependencies) {
-				require(dependency);
+				include(dependency);
 			}
 		}
 	}
 
+	@:deprecated("Use include() instead")
+	public function require(config:WorldConfig) {
+		include(config);
+	}
+
+	/**
+		Adds `service` instance to config. It could be `Component`/`System`/`Service`.
+		`priority` is optional value for `System` instances.
+		Systems with the lowest priority running first.
+	**/
 	public function add(service:Service, priority:Int = 0) {
 		#if ecx_debug
 		if(service == null) throw "Null service";
@@ -24,7 +42,10 @@ class WorldConfig {
 		_priorities.push(priority);
 	}
 
-	public function require(config:WorldConfig) {
+	/**
+		Include plugin `WorldConfig` instance.
+	**/
+	public function include(config:WorldConfig) {
 		#if ecx_debug
 		checkAddedConfigs(config);
 		_guardConfigs.push(config);

@@ -18,10 +18,6 @@ abstract CInt32Array(CInt32ArrayData) {
 		this = new CInt32ArrayData(length);
 	}
 
-	inline function get_length() {
-		return this.length;
-	}
-
 	@:arrayAccess
 	inline public function get(index:Int):Int {
 		return this[index];
@@ -30,5 +26,13 @@ abstract CInt32Array(CInt32ArrayData) {
 	@:arrayAccess
 	inline public function set(index:Int, element:Int):Void {
 		this[index] = element;
+	}
+
+	inline public function getObjectSize():Int {
+		return this.length << 2;
+	}
+
+	inline function get_length() {
+		return this.length;
 	}
 }

@@ -62,6 +62,10 @@ class EntityVector {
 		return new EntityMultiSetIterator(this);
 	}
 
+	public function getObjectSize():Int {
+		return buffer.getObjectSize() + 4;
+	}
+
 	function grow(newLength:Int) {
 		var data = buffer;
 		// TODO: new size with current length (increase steps)

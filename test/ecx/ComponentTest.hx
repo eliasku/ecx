@@ -25,12 +25,12 @@ class ComponentTest extends EcxTest {
 		v.value = 10;
 		Assert.equals(10, v.value);
 
-		world.delete(e);
+		world.destroy(e);
 
 		world.invalidate();
 
 //		Assert.isNull(v.world);
-//		Assert.isTrue(v.entity.isInvalid);
+//		Assert.isTrue(!v.entity);
 	}
 
 	public function testComponentDelete() {
@@ -39,14 +39,11 @@ class ComponentTest extends EcxTest {
 		var v:ValueData = value.create(e);
 		Assert.notNull(v);
 
-		value.remove(e);
-
-//		Assert.isFalse(v.entity.isValid);
-//		Assert.isNull(v.world);
+		value.destroy(e);
 
 		var noValue:ValueData = value.get(e);
 		Assert.isNull(noValue);
 
-		world.delete(e);
+		world.destroy(e);
 	}
 }

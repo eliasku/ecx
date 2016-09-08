@@ -5,31 +5,58 @@ package ecx;
     - `0` entity id is reserved as INVALID
     - Components slot `0` could be used for storing internal information
 **/
-@:dce @:final @:unreflective @:notNull
+@:dce @:final @:unreflective
 abstract Entity(Int) {
 
-	/**
-		Constant for invalid handle value
-	**/
-	public static inline var INVALID:Entity = new Entity(0);
+	/** Index reserved for null-entity **/
+	public static inline var ID_NULL:Int = 0;
 
+	/** Null-entity constant **/
+	public static inline var NULL:Entity = new Entity(ID_NULL);
+
+	/** Entity handle ID **/
 	public var id(get, never):Int;
-	public var isValid(get, never):Bool;
-	public var isInvalid(get, never):Bool;
 
 	inline function new(id:Int) {
 		this = id;
 	}
 
+	inline function get_id():Int {
+		return this;
+	}
+
+	inline public function notNull():Bool {
+		#if js
+		return (this | 0) != 0;
+		#else
+		return this != 0;
+		#end
+	}
+
+	inline public function isNull():Bool {
+		#if js
+		return (this | 0) == 0;
+		#else
+		return this == 0;
+		#end
+	}
+
+	// COMPAT
+
+	@:deprecated("Use NULL instead")
+	inline public static var INVALID:Entity = new Entity(ID_NULL);
+
+	@:deprecated("Use notNull() instead")
+	public var isValid(get, never):Bool;
+
+	@:deprecated("Use isNull() instead")
+	public var isInvalid(get, never):Bool;
+
 	inline function get_isValid():Bool {
-		return this > 0;
+		return notNull();
 	}
 
 	inline function get_isInvalid():Bool {
-		return this <= 0;
-	}
-
-	inline function get_id():Int {
-		return this;
+		return isNull();
 	}
 }

@@ -26,7 +26,7 @@ class FamilyTest extends EcxTest {
 		Assert.equals(1, ms.entities.length);
 		Assert.equals(entity.id, ms.entities.get(0));
 
-		ms.motion.remove(entity);
+		ms.motion.destroy(entity);
 		world.commit(entity);
 		world.invalidate();
 		Assert.equals(0, ms.entities.length);

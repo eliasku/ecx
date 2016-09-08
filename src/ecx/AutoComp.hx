@@ -2,6 +2,9 @@ package ecx;
 
 import ecx.types.ComponentType;
 
+/**
+	Shortcut to define Components, see examples on how to use it.
+**/
 #if !macro
 @:autoBuild(ecx.macro.AutoCompBuilder.build())
 #end
@@ -18,10 +21,14 @@ class AutoComp<T> extends Service implements IComponent {
 		return false;
 	}
 
-	public function remove(entity:Entity) {}
+	public function destroy(entity:Entity) {}
 	public function copy(source:Entity, destination:Entity) {}
 
 	public function __componentType() {
 		return ComponentType.INVALID;
+	}
+
+	public function getObjectSize():Int {
+		return 0;
 	}
 }

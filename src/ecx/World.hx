@@ -21,10 +21,15 @@ using ecx.managers.WorldDebug;
 @:access(ecx.System, ecx.Family, ecx.Entity)
 class World {
 
-	// Mapping: (type, entity) => component
+	/**
+		Component table.
+	**/
+	// TODO: make it private?
 	public var components(default, null):ComponentTable;
 
-	// Identifier of this world
+	/**
+		Identifier of this world
+ 	**/
 	public var id(default, null):Int;
 
 	/**
@@ -36,7 +41,11 @@ class World {
 		For capacity = 5 we have set of valid entities {1, 2, 3, 4} and one invalid is 0
 	**/
 	public var capacity(default, null):Int;
+
+	/** Count of alive entities **/
 	public var used(default, null):Int = 0;
+
+	/** Count of available entities in pool **/
 	public var available(get, never):Int;
 
 	// lookup for all systems
@@ -72,6 +81,10 @@ class World {
 		WorldConstructor.construct(this, capacity, config);
 	}
 
+	/**
+		Get registered `Service` by compile-time `Class<Service>` constant.
+		Note: macro generates unsafe-cast to `T:Service`.
+	**/
 	macro public function resolve<T:Service>(self:ExprOf<World>, serviceClass:ExprOf<Class<T>>):ExprOf<T> {
 		var serviceType = ClassMacroTools.serviceType(serviceClass);
 		return macro {
@@ -80,20 +93,29 @@ class World {
 		};
 	}
 
+	/**
+		Return new active entity (which will be marked as changed).
+	**/
 	public function create():Entity {
 		var entity = allocNextEntity();
 		_aliveMask.enable(entity.id);
 		_activeMask.enable(entity.id);
+		markEntityAsChanged(entity);
 		return entity;
 	}
 
-	/** Useful for prefabs **/
+	/**
+		Returns new passive entity.
+	**/
 	public function createPassive():Entity {
 		var entity = allocNextEntity();
 		_aliveMask.enable(entity.id);
 		return entity;
 	}
 
+	/**
+		Creates active entity and clone data from `source` entity.
+	**/
 	public function clone(source:Entity):Entity {
 		var entity = create();
 		var componentsByType = components;
@@ -104,7 +126,10 @@ class World {
 		return entity;
 	}
 
-	public function delete(entity:Entity) {
+	/**
+		Entity will be destroyed on next world invalidation
+	**/
+	public function destroy(entity:Entity) {
 		#if ecx_debug
 		guardEntity(entity);
 		#end
@@ -113,13 +138,21 @@ class World {
 		}
 	}
 
+	@:deprecated("Use destroy() instead")
+	public function delete(entity:Entity) {
+		destroy(entity);
+	}
+
+	/**
+		Performs entities destroying, commits and update families
+	**/
 	public function invalidate() {
 		#if ecx_debug
 		lockFamilies();
 		#end
 
 		if(_removedVector.length > 0 || _changedVector.length > 0) {
-			deleteEntities();
+			destroyEntities();
 			changeEntities();
 			updateFamilyVectors();
 		}
@@ -130,36 +163,47 @@ class World {
 		#end
 	}
 
+	/**
+		Make `entity` active
+	**/
 	public function activate(entity:Entity) {
 		#if ecx_debug
 		guardEntity(entity);
 		if(_activeMask.get(entity.id)) throw 'This entity is already active';
 		#end
 		_activeMask.enable(entity.id);
-		_internal_entityChanged(entity);
+		markEntityAsChanged(entity);
 	}
 
+	/**
+		Make `entity` passive
+	**/
 	public function deactivate(entity:Entity) {
 		#if ecx_debug
 		guardEntity(entity);
 		if(!_activeMask.get(entity.id)) throw "This entity is already inactive";
 		#end
 		_activeMask.disable(entity.id);
-		_internal_entityChanged(entity);
+		markEntityAsChanged(entity);
 	}
 
-//	macro public function componentArray<T:(Component<Dynamic>, Service)>(self:ExprOf<World>, componentClass:ExprOf<Class<T>>):ExprOf<T> {
-//		return macro cast @:privateAccess $self._services[componentClass.__TYPE.id];
-//	}
-
+	/**
+		Convert integer `id` to abstract `Entity` handle.
+	**/
 	inline public function getEntity(id:Int):Entity {
 		return @:privateAccess new Entity(id);
 	}
 
+	/**
+		Check if `entity` is active
+	**/
 	inline public function isActive(entity:Entity):Bool {
 		return _activeMask.get(entity.id);
 	}
 
+	/**
+		Check if `entity` is alive
+	**/
 	inline public function checkAlive(entity:Entity):Bool {
 		return _aliveMask.get(entity.id);
 	}
@@ -168,34 +212,28 @@ class World {
 		return 'World #$id';
 	}
 
-//	inline public function hasComponent(entity:Entity, type:ComponentType):Bool {
-//		return components[type.id].has(entity);
-//	}
-//
-//	public function removeComponent(entity:Entity, type:ComponentType) {
-//		var entityToComponent:Component<Dynamic> = components[type.id];
-//		entityToComponent.remove(entity);
-//		if(isActive(entity)) {
-//			_internal_entityChanged(entity);
-//		}
-//	}
-
-	public function clearComponents(entity:Entity) {
+	/**
+		Destroy all components attached to `entity`
+	**/
+	public function destroyComponents(entity:Entity) {
 		var componentsData = components;
 		for(typeId in 0...componentsData.length) {
 			var component = componentsData[typeId];
 			if(component.has(entity)) {
-				componentsData[typeId].remove(entity);
+				componentsData[typeId].destroy(entity);
 			}
 		}
 		if(isActive(entity)) {
-			_internal_entityChanged(entity);
+			markEntityAsChanged(entity);
 		}
 	}
 
+	/**
+		Mark entity as changed
+	**/
 	inline public function commit(entity:Entity) {
 		if(isActive(entity)) {
-			_internal_entityChanged(entity);
+			markEntityAsChanged(entity);
 		}
 	}
 
@@ -218,7 +256,7 @@ class World {
 	}
 
 	@:access(ecx.types.FamilyData)
-	function deleteEntities() {
+	function destroyEntities() {
 		var entities = _removedVector;
 		var locPool = _pool;
 		var locRemovedFlags = _removedMask;
@@ -236,7 +274,7 @@ class World {
 					families.get(j).__disableEntity(entity);
 				}
 
-				clearComponents(entity);
+				destroyComponents(entity);
 				locActiveFlags.disable(entity.id);
 				locAliveMask.disable(entity.id);
 				locRemovedFlags.disable(entity.id);
@@ -302,7 +340,7 @@ class World {
 		}
 	}
 
-	function _internal_entityChanged(entity:Entity) {
+	function markEntityAsChanged(entity:Entity) {
 		#if ecx_debug
 		guardEntity(entity);
 		#end

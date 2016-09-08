@@ -51,6 +51,10 @@ abstract CBitArray(CInt32Array) {
         return false;
     }
 
+    inline public function getObjectSize():Int {
+        return this.length << 2;
+    }
+
     //@:pure
     inline public static function address(index:Int):Int {
         return index >>> BIT_SHIFT;

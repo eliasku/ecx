@@ -4,7 +4,15 @@ import ecx.types.ServiceSpec;
 import ecx.types.ServiceType;
 
 /**
-	Service is injectable world type
+	Service is injectable world-scope type.
+
+	Initialization steps:
+	- services are instantiated by passing to world-configuration
+	- services are wired with each other
+	- services are initialized
+	- systems are able to be updated (if not IDLE)
+
+	@see ecx.Wire
 **/
 
 #if !macro

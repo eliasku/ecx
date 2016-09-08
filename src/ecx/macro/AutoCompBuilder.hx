@@ -1,5 +1,6 @@
 package ecx.macro;
 
+#if macro
 import ecx.macro.FieldsBuilder;
 import ecx.macro.MacroUtil;
 import haxe.macro.Context;
@@ -40,6 +41,7 @@ class AutoCompBuilder {
 		buildCreate(fields, dataType, values);
 		buildStorageAndAllocator(fields, dataType, values);
 		buildOther(fields, values, ctData);
+		buildObjectSize(fields, values, ctData);
 
 		return fields;
 	}
@@ -200,7 +202,7 @@ class AutoCompBuilder {
 				data[entity.id] = component;
 			}
 
-			inline override public function remove(entity:ecx.Entity) {
+			inline override public function destroy(entity:ecx.Entity) {
 				data[entity.id] = ${values.none};
 			}
 
@@ -209,4 +211,14 @@ class AutoCompBuilder {
 			}
 		});
 	}
+
+	static function buildObjectSize(fields:Array<Field>, values:ComponentMacroValues, ctData:ComplexType) {
+		FieldsBuilder.appendMacroClass(fields, macro class ObjectSize {
+			override public function getObjectSize():Int {
+				return data.getObjectSize();
+			}
+		});
+	}
 }
+
+#end
