@@ -69,7 +69,7 @@ class World {
 	var _pool:CInt32RingBuffer;
 
 	// entity => entity wrapper
-	var _mapToData:CArray<EntityData>;
+	//var _mapToData:CArray<EntityData>;
 
 	// Flags
 	var _aliveMask:CBitArray;
@@ -157,7 +157,7 @@ class World {
 	**/
 	public function invalidate() {
 		#if ecx_debug
-		lockFamilies();
+		makeFamiliesMutable();
 		#end
 
 		if(_removedVector.length > 0 || _changedVector.length > 0) {
@@ -168,7 +168,7 @@ class World {
 
 		#if ecx_debug
 		guardFamilies();
-		unlockFamilies();
+		makeFamiliesImmutable();
 		#end
 	}
 
@@ -331,7 +331,6 @@ class World {
 		used -= count;
 		#if ecx_debug
 		if(used < 0) throw "No way!";
-		//if(startLength != removeList.length) throw "removing while removing";
 		#end
 		entities.reset();
 	}
@@ -343,12 +342,11 @@ class World {
 		var activeFlags = _activeMask;
 		var aliveMask = _aliveMask;
 		var families = _families;
-		var startLength = entities.length;
 		var familiesTotal = families.length;
-		if(entities.length > 0) {
-			var i = 0;
-			var end = entities.length;
-			while (i < end) {
+		var i = 0;
+		while(i < entities.length) {
+			var tail = entities.length;
+			while (i < tail) {
 				var entity = entities.get(i);
 				var alive = aliveMask.get(entity.id);
 				if(alive) {
@@ -367,11 +365,8 @@ class World {
 				changedFlags.disable(entity.id);
 				++i;
 			}
-			#if ecx_debug
-			if(startLength != entities.length) throw "update while updating";
-			#end
-			entities.reset();
 		}
+		entities.reset();
 	}
 
 	@:access(ecx.types.FamilyData)

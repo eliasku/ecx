@@ -96,7 +96,7 @@ class FamilyData {
     var _debugEntitiesCopy:Array<Entity>;
     var _mutable:Bool = false;
 
-    public function debugLock() {
+    public function debugMakeMutable() {
         if(_mutable == true) throw 'imm1';
         _mutable = true;
         if(_debugEntitiesCopy == null) return;
@@ -107,7 +107,7 @@ class FamilyData {
 
     }
 
-    public function debugUnlock() {
+    public function debugMakeImmutable() {
         if(_mutable == false) throw 'imm2';
         _mutable = false;
         // create immutable copy for checking

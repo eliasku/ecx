@@ -30,7 +30,7 @@ class WorldConstructor {
 
 		// entities support
 		world._pool = createEntityPool(capacity);
-		world._mapToData = createEntityWrappers(world);
+		//world._mapToData = createEntityWrappers(world);
 		world._aliveMask = new CBitArray(capacity);
 		world._activeMask = new CBitArray(capacity);
 
@@ -81,13 +81,13 @@ class WorldConstructor {
 	}
 
 	// unused
-	static function createEntityWrappers(world:World) {
-		var wrappers = new CArray<EntityData>(world.capacity);
-		for(id in 1...wrappers.length) {
-			wrappers[id] = new EntityData(new Entity(id), world);
-		}
-		return wrappers;
-	}
+//	static function createEntityWrappers(world:World) {
+//		var wrappers = new CArray<EntityData>(world.capacity);
+//		for(id in 1...wrappers.length) {
+//			wrappers[id] = new EntityData(new Entity(id), world);
+//		}
+//		return wrappers;
+//	}
 
 	@:access(ecx.Service)
 	static function createServicesLookup(config:WorldConfig):CArray<Service> {
