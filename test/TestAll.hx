@@ -1,5 +1,6 @@
 package ;
 
+import ecx.EntityVectorTest;
 import ecx.ComponentTest;
 import ecx.EntityTest;
 import ecx.FamilyTest;
@@ -12,6 +13,7 @@ import utest.TestResult;
 import utest.ui.Report;
 
 class TestAll {
+
 	public static function main() {
 		var runner = new Runner();
 		addTests(runner);
@@ -26,6 +28,7 @@ class TestAll {
 		runner.addCase(new IssuesTest());
 		runner.addCase(new ServiceHierarchyTest());
 		runner.addCase(new FamilyTest());
+		runner.addCase(new EntityVectorTest());
 	}
 
 	static function run(runner:Runner) {
