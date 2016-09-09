@@ -15,7 +15,7 @@ class EntityVector {
 
 	inline public function ensure(maxLength:Int) {
 		if (maxLength >= buffer.length) {
-			grow(maxLength);
+			grow(maxLength + 1);
 		}
 	}
 

@@ -146,6 +146,7 @@ class World {
 		}
 	}
 
+	/** DEPRECATED! Use `destroy()` instead **/
 	@:deprecated("Use destroy() instead")
 	public function delete(entity:Entity) {
 		destroy(entity);

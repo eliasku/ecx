@@ -43,12 +43,15 @@ abstract Entity(Int) {
 
 	// COMPAT
 
+	/** DEPRECATED! Use `NULL` instead **/
 	@:deprecated("Use NULL instead")
 	inline public static var INVALID:Entity = new Entity(ID_NULL);
 
+	/** DEPRECATED! Use `notNull()` instead **/
 	@:deprecated("Use notNull() instead")
 	public var isValid(get, never):Bool;
 
+	/** DEPRECATED! Use `isNull()` instead **/
 	@:deprecated("Use isNull() instead")
 	public var isInvalid(get, never):Bool;
 

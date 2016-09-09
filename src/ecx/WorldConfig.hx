@@ -22,6 +22,7 @@ class WorldConfig {
 		}
 	}
 
+	/** DEPRECATED! Use `include()` instead **/
 	@:deprecated("Use include() instead")
 	public function require(config:WorldConfig) {
 		include(config);
