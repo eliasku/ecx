@@ -53,8 +53,8 @@ class MovementSystem extends System {
 
 ### Family
 
-For all `System`
-For example we need to track all active(live) entities with components: Transform, Node and Renderable
+For all `System` types.
+For example we need to track all active(live) entities with components: Transform, Node and Renderable.
 ```
 class MovementSystem extends System {
     var _entities:Family<Transform, Node, Renderable>;
@@ -67,6 +67,13 @@ class MovementSystem extends System {
         }
     }
 }
+```
+
+Sometimes it could be useful to mark some optional component in Family declaration just for readability.
+You can wrap each optional Component type in parentheses `()` and it will be ignored by Family, but
+will be notated.
+```
+var _entities:Family<Transform, Node, Renderable, (Scissors)>;
 ```
 
 ### System Flags

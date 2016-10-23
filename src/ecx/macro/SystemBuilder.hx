@@ -65,8 +65,10 @@ class SystemBuilder {
 											case TypeParam.TPType(TPath(componentTypePath)):
 												var fullname = MacroUtil.getFullNameFromTypePath(componentTypePath);
 												familyTypeParams.push(macro #if !ecx_macro_debug @:pos($v{field.pos}) #end $i{fullname});
+											case TypeParam.TPType(TParent(TPath(_))):
+												// Ignore optional types
 											default:
-												Context.error("Bad family type", field.pos);
+												Context.error("Bad family type: " + param, field.pos);
 										}
 									}
 									exprs.push(macro {
