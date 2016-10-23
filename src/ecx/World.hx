@@ -9,7 +9,6 @@ import ecx.ds.CInt32RingBuffer;
 import ecx.ds.Cast;
 import ecx.macro.ClassMacroTools;
 import ecx.managers.WorldConstructor;
-import ecx.types.EntityData;
 import ecx.types.EntityVector;
 import ecx.types.FamilyData;
 import haxe.macro.Expr.ExprOf;
@@ -163,7 +162,7 @@ class World {
 		if(_removedVector.length > 0 || _changedVector.length > 0) {
 			destroyEntities();
 			changeEntities();
-			updateFamilyVectors();
+			FamilyData.updateVector(_families);
 		}
 
 		#if ecx_debug
@@ -367,16 +366,6 @@ class World {
 			}
 		}
 		entities.reset();
-	}
-
-	@:access(ecx.types.FamilyData)
-	function updateFamilyVectors() {
-		for(i in 0..._families.length) {
-			var family = _families.get(i);
-			if(family.changed) {
-				family.__invalidate();
-			}
-		}
 	}
 
 	function markEntityAsChanged(entity:Entity) {

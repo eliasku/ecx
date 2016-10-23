@@ -5,8 +5,6 @@
 		"entity",
 		"component",
 		"system",
-		"ecs",
-		"ces",
 		"cross"
 	],
 	"classPath": "src",
@@ -16,5 +14,8 @@
 	],
 	"releasenote": "API 2.0",
 	"version": "0.1.0",
-	"url": "https://github.com/eliasku/ecx"
+	"url": "https://github.com/eliasku/ecx",
+	"dependencies": {
+		"power-of-two": ""
+	}
 }

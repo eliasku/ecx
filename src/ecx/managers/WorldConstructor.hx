@@ -1,5 +1,6 @@
 package ecx.managers;
 
+import hxutil.math.PowerOfTwo;
 import ecx.types.EntityVector;
 import ecx.types.ComponentTable;
 import ecx.ds.CBitArray;
@@ -22,7 +23,7 @@ class WorldConstructor {
 		#end
 
 		// capacity alignment
-		capacity = nextPowerOfTwo(capacity - 1) + 1;
+		capacity = PowerOfTwo.require(capacity) + 1;
 		world.capacity = capacity;
 
 		// components table
@@ -165,18 +166,5 @@ class WorldConstructor {
 
 	static function deleteConfigurators(world:World) {
 		// TODO: somehow
-	}
-
-	static function nextPowerOfTwo(value:Int):Int {
-		if (value == 0) {
-			return 1;
-		}
-		--value;
-		value |= value >> 1;
-		value |= value >> 2;
-		value |= value >> 4;
-		value |= value >> 8;
-		value |= value >> 16;
-		return value + 1;
 	}
 }

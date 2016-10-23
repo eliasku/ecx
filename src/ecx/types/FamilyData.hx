@@ -117,4 +117,13 @@ class FamilyData {
         }
     }
     #end
+
+    public static function updateVector(families:CArray<FamilyData>) {
+        for(i in 0...families.length) {
+            var family = families.get(i);
+            if(family.changed) {
+                family.__invalidate();
+            }
+        }
+    }
 }

@@ -10,6 +10,9 @@ class EcxMake extends hxmake.Module {
 	function new() {
 		config.classPath = ["src"];
 		config.testPath = ["test"];
+		config.dependencies = [
+			"power-of-two" => "haxelib"
+		];
 		config.devDependencies = [
 			"utest" => "haxelib"
 		];
@@ -21,7 +24,7 @@ class EcxMake extends hxmake.Module {
 			ext.config.version = "0.1.0";
 			ext.config.description = "ECX entity-component-system framework";
 			ext.config.url = "https://github.com/eliasku/ecx";
-			ext.config.tags = ["entity", "component", "system", "ecs", "ces", "cross"];
+			ext.config.tags = ["entity", "component", "system", "cross"];
 			ext.config.contributors = ["eliasku"];
 			ext.config.license = "MIT";
 			ext.config.releasenote = "API 2.0";

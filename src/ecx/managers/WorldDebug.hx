@@ -6,7 +6,6 @@ class WorldDebug {
 
 	public static function guardEntity(world:World, entity:Entity) {
 		if(entity.isNull()) throw "Invalid entity";
-		//if(world._mapToData[entity.id] == null) throw "Null entity";
 		if(!world.checkAlive(entity)) throw "Dead entity";
 	}
 
