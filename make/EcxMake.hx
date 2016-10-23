@@ -1,3 +1,4 @@
+import hxmake.test.SetupTask;
 import hxmake.test.TestTask;
 import hxmake.haxelib.HaxelibExt;
 import hxmake.idea.IdeaPlugin;
@@ -32,10 +33,13 @@ class EcxMake extends hxmake.Module {
 			ext.pack.includes = ["src", "haxelib.json", "README.md"];
 		});
 
+		var testTaskDependencies = new SetupTask();
+		testTaskDependencies.librariesFromGit.push("power-of-two;https://github.com/eliasku/power-of-two.git");
+
 		var tt = new TestTask();
 		tt.debug = true;
 		tt.targets = ["neko", "swf", "node", "js", "cpp", "java", "cs"];
-		tt.libraries = ["ecx"];
-		task("test", tt);
+		tt.libraries = ["ecx", "power-of-two"];
+		task("test", tt).prepend(testTaskDependencies);
 	}
 }
