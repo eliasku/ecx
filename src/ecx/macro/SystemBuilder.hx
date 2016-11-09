@@ -44,7 +44,7 @@ class SystemBuilder {
 				_flags = _flags.add(ecx.types.SystemFlags.CONFIG);
 			});
 		}
-		var hasUpdate:Bool = false;
+
 		for(field in fields) {
 			switch(field.kind) {
 				case FieldType.FVar(t, e) | FieldType.FProp(_, _, t, e):
@@ -60,17 +60,39 @@ class SystemBuilder {
 								}
 								else {
 									var familyTypeParams = [];
+
+									#if ecx_report
+									var reportFamilyComponents:Array<String> = [];
+									var reportFamilyOptionalComponents:Array<String> = [];
+									#end
+
 									for(param in params) {
 										switch(param) {
 											case TypeParam.TPType(TPath(componentTypePath)):
 												var fullname = MacroUtil.getFullNameFromTypePath(componentTypePath);
 												familyTypeParams.push(macro #if !ecx_macro_debug @:pos($v{field.pos}) #end $i{fullname});
-											case TypeParam.TPType(TParent(TPath(_))):
+												#if ecx_report
+												reportFamilyComponents.push(fullname);
+												#end
+											case TypeParam.TPType(TParent(TPath(tpOptionalComponent))):
+												#if ecx_report
+												reportFamilyOptionalComponents.push(MacroUtil.getFullNameFromTypePath(tpOptionalComponent));
+												#end
 												// Ignore optional types
 											default:
 												Context.error("Bad family type: " + param, field.pos);
 										}
 									}
+
+									#if ecx_report
+									ecx.reporting.EcxBuildReport.addFamily(
+										field.name,
+										MacroUtil.getFullNameFromBaseType(cls),
+										reportFamilyComponents,
+										reportFamilyOptionalComponents
+									);
+									#end
+
 									exprs.push(macro {
 										#if !ecx_macro_debug @:pos(${field.pos}) #end $i{field.name} = _family($a{familyTypeParams});
 									});

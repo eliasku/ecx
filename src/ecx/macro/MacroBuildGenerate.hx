@@ -29,6 +29,10 @@ class MacroBuildGenerate {
             exprs.push(macro $v{systemData.specId});
         }
         metaAccess.add("systems", exprs, Context.currentPos());
+
+        #if ecx_report
+        ecx.reporting.EcxBuildReport.save();
+        #end
 //
 //        var exprs = [];
 //        for(componentData in MacroComponentCache.cache) {

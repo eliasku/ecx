@@ -120,8 +120,11 @@ class Color extends Service implements Component {
 
 ## Debug
 
-Use `-D ecx_debug` for debugging
-Use `-D ecx_macro_debug` for macro debugging
+`-D ecx_debug` for debugging
+
+`-D ecx_macro_debug` for macro debugging
+
+`-D ecx_report` to get and analyse `ecx_wires.html` and `ecx_matrix.html` report files generated during compilation
 
 ## TODO:
 

@@ -95,6 +95,13 @@ class ServiceBuilder {
 				default:
 			}
 		}
+
+		#if ecx_report
+		var rsn = Context.getLocalClass().get().name;
+		for(it in injectType) {
+			ecx.reporting.EcxBuildReport.trackWire(rsn, it);
+		}
+		#end
 		if(injectFields.length > 0) {
 			for(i in 0...injectFields.length) {
 				var injectField = injectFields[i];
