@@ -52,7 +52,7 @@ class AutoCompBuilder {
 			case TInst(x, _):
 				var ctData = Context.toComplexType(type);
 				var tpData = switch(ctData) {
-					case ComplexType.TPath(x): x;
+					case ComplexType.TPath(tp): tp;
 					default: throw "bad class " + type;
 				}
 				if(tpData.name == "String") {
