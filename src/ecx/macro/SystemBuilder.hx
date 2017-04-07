@@ -123,7 +123,7 @@ class SystemBuilder {
 					}
 					field.meta.push({
 						name: ":unreflective",
-						pos: field.pos
+						pos: Context.currentPos()
 					});
 			}
 		}
