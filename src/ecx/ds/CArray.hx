@@ -1,6 +1,6 @@
 package ecx.ds;
 
-#if (neko||macro)
+#if neko
 private typedef CArrayData<T> = neko.NativeArray<T>;
 #elseif flash
 private typedef CArrayData<T> = flash.Vector<T>;
@@ -40,7 +40,7 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 		this = new java.NativeArray<T>(length);
 		#elseif cs
 		this = new cs.NativeArray<T>(length);
-		#elseif (macro||neko)
+		#elseif neko
 		this = neko.NativeArray.alloc(length);
 		#else
 		this = [for (i in 0...length) null];
@@ -48,7 +48,7 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 	}
 
 	inline function get_length() {
-		#if (macro||neko)
+		#if neko
 		return neko.NativeArray.length(this);
 		#else
 		return this.length;
@@ -85,7 +85,7 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 		return java.Lib.nativeArray(array, false);
 		#elseif cs
 		return cs.Lib.nativeArray(array, false);
-		#elseif (neko||macro)
+		#elseif neko
 		return neko.NativeArray.ofArrayCopy(array);
 		#else
 		var result = new CArray<T>(array.length);
