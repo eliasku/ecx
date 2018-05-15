@@ -17,7 +17,9 @@ branches:
     - develop
 
 install:
-  - cinst haxe -version 3.4.7 -y
+  - ps: Set-Service wuauserv -StartupType Manual
+  - cinst neko --version 2.2.0 -y
+  - cinst haxe --version 3.4.7 --ignore-dependencies -y
   - RefreshEnv
   - mkdir "%HAXELIB_ROOT%"
   - haxelib setup "%HAXELIB_ROOT%"
