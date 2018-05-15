@@ -122,22 +122,36 @@ class AutoCompBuilder {
 	}
 
 	static function buildStorageAndAllocator(fields:Array<Field>, type:Type, values:ComponentMacroValues) {
+		var sparse = false;
 		if(values.storage == null) {
+			sparse = true;
 			values.storage = {
-				pack: ["ecx", "ds"],
-				name: "CArray",
+//				pack: ["ecx", "ds"],
+//				name: "CArray",
+				pack: [],
+				name: "Array",
 				params: [ TPType(Context.toComplexType(type)) ]
 			};
 		}
 		var ct = ComplexType.TPath(values.storage);
 		var tp = values.storage;
 
-		FieldsBuilder.appendMacroClass(fields, macro class StoreAndAllocate {
-			public var data(default, null):$ct;
-			override function __allocate() {
-				data = new $tp(world.capacity);
-			}
-		});
+		if(sparse) {
+			FieldsBuilder.appendMacroClass(fields, macro class StoreAndAllocate {
+				public var data(default, null):$ct;
+				override function __allocate() {
+					data = new $tp();
+				}
+			});
+		}
+		else {
+			FieldsBuilder.appendMacroClass(fields, macro class StoreAndAllocate {
+				public var data(default, null):$ct;
+				override function __allocate() {
+					data = new $tp(world.capacity);
+				}
+			});
+		}
 	}
 
 	static function buildCopy(fields:Array<Field>, type:Type, values:ComponentMacroValues) {
@@ -215,7 +229,8 @@ class AutoCompBuilder {
 	static function buildObjectSize(fields:Array<Field>, values:ComponentMacroValues, ctData:ComplexType) {
 		FieldsBuilder.appendMacroClass(fields, macro class ObjectSize {
 			override public function getObjectSize():Int {
-				return data.getObjectSize();
+				//return data.getObjectSize();
+				return 0;
 			}
 		});
 	}

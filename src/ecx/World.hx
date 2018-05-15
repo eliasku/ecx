@@ -47,14 +47,15 @@ class World {
 
 	// components
 	var _components:ComponentTable;
+	var _activators:CArray<IComponent>;
 
-	// lookup for all systems
+	// services
 	var _services:CArray<Service>;
 
-	// all systems sorted by priority
+	// services (sorted by priority)
 	var _orderedServices:CArray<Service>;
 
-	// only active systems (not idle)
+	// systems (not idle, sorted by priority)
 	var _systems:CArray<System>;
 
 	// systems with families
@@ -67,10 +68,7 @@ class World {
 
 	var _pool:CInt32RingBuffer;
 
-	// entity => entity wrapper
-	//var _mapToData:CArray<EntityData>;
-
-	// Flags
+	// flags
 	var _aliveMask:CBitArray;
 	var _activeMask:CBitArray;
 	var _changedMask:CBitArray;
@@ -143,12 +141,6 @@ class World {
 		if(_removedMask.enableIfNot(entity.id)) {
 			_removedVector.place(entity);
 		}
-	}
-
-	/** DEPRECATED! Use `destroy()` instead **/
-	@:deprecated("Use destroy() instead")
-	public function delete(entity:Entity) {
-		destroy(entity);
 	}
 
 	/**

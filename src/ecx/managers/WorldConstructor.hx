@@ -4,14 +4,13 @@ import hxutil.math.PowerOfTwo;
 import ecx.types.EntityVector;
 import ecx.types.ComponentTable;
 import ecx.ds.CBitArray;
-import ecx.types.EntityData;
 import ecx.ds.CInt32RingBuffer;
 import ecx.ds.CArray;
 import ecx.types.FamilyData;
 
 @:dce @:final @:unreflective
 @:access(ecx.World, ecx.System, ecx.Engine, ecx.Entity)
-@:access(ecx.WorldConfig, ecx.types.EntityData)
+@:access(ecx.WorldConfig)
 @:allow(ecx.World)
 class WorldConstructor {
 

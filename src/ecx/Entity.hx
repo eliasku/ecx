@@ -21,45 +21,19 @@ abstract Entity(Int) {
 		this = id;
 	}
 
-	inline function get_id():Int {
-		return this;
-	}
-
 	inline public function notNull():Bool {
-		#if js
-		return (this | 0) != 0;
-		#else
-		return this != 0;
-		#end
+		return id != 0;
 	}
 
 	inline public function isNull():Bool {
+		return id == 0;
+	}
+
+	inline function get_id():Int {
 		#if js
-		return (this | 0) == 0;
+		return this | 0;
 		#else
-		return this == 0;
+		return this;
 		#end
-	}
-
-	// COMPAT
-
-	/** DEPRECATED! Use `NULL` instead **/
-	@:deprecated("Use NULL instead")
-	inline public static var INVALID:Entity = new Entity(ID_NULL);
-
-	/** DEPRECATED! Use `notNull()` instead **/
-	@:deprecated("Use notNull() instead")
-	public var isValid(get, never):Bool;
-
-	/** DEPRECATED! Use `isNull()` instead **/
-	@:deprecated("Use isNull() instead")
-	public var isInvalid(get, never):Bool;
-
-	inline function get_isValid():Bool {
-		return notNull();
-	}
-
-	inline function get_isInvalid():Bool {
-		return isNull();
 	}
 }
