@@ -1,3 +1,4 @@
 # 0.1.1
 
-- Fix compatibility 
+- Fix Haxe compatibility
+- Remove `power-of-two` dependency

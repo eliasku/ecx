@@ -1,5 +1,6 @@
 package ;
 
+import ecx.PowerOfTwoTest;
 import ecx.EntityVectorTest;
 import ecx.ComponentTest;
 import ecx.EntityTest;
@@ -21,6 +22,7 @@ class TestAll {
 	}
 
 	static function addTests(runner:Runner) {
+		runner.addCase(new PowerOfTwoTest());
 		runner.addCase(new WorldTest());
 		runner.addCase(new EntityTest());
 		runner.addCase(new ComponentTest());

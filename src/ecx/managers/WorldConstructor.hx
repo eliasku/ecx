@@ -1,6 +1,6 @@
 package ecx.managers;
 
-import hxutil.math.PowerOfTwo;
+import ecx.ds.PowerOfTwo;
 import ecx.types.EntityVector;
 import ecx.types.ComponentTable;
 import ecx.ds.CBitArray;

@@ -6,8 +6,6 @@ import ecx.ds.CArray;
 import ecx.ds.CArrayIterator;
 import ecx.ds.CBitArray;
 import ecx.ds.CInt32RingBuffer;
-import ecx.ds.Cast;
-import ecx.macro.ClassMacroTools;
 import ecx.managers.WorldConstructor;
 import ecx.types.EntityVector;
 import ecx.types.FamilyData;
@@ -84,7 +82,7 @@ class World {
 		Note: macro generates unsafe-cast to `T:Service`.
 	**/
 	macro public function resolve<T:Service>(self:ExprOf<World>, serviceClass:ExprOf<Class<T>>):ExprOf<T> {
-		var serviceType = ClassMacroTools.serviceType(serviceClass);
+		var serviceType = ecx.macro.ClassMacroTools.serviceType(serviceClass);
 		return macro {
 			var tmp = @:privateAccess $self._services[$serviceType.id];
 			ecx.ds.Cast.unsafe(tmp, $serviceClass);

@@ -17,10 +17,10 @@ branches:
 
 env:
     matrix:
-    - TARGET=neko,node
-    - TARGET=flash,js
+    - TARGET=js,node
     - TARGET=cpp
     - TARGET=cs,java
+    - TARGET=neko,flash
 
 matrix:
   allow_failures:
