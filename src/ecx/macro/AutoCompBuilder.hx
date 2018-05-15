@@ -26,7 +26,7 @@ class AutoCompBuilder {
 		var fields = Context.getBuildFields();
 		var localClass:ClassType = Context.getLocalClass().get();
 		localClass.meta.add(":final", [], pos);
-
+		
 		buildDefaultConstructor(fields);
 
 		var dataType:Type = localClass.superClass.params[0];
@@ -76,6 +76,20 @@ class AutoCompBuilder {
 							none: macro 0.0,
 							def: macro 0.0,
 							primitive: true
+						};
+					case "Int":
+						return {
+							none: macro 0,
+							def: macro 0,
+							primitive: true,
+							storage: { pack: ["ecx", "ds"], name: "CInt32Array" }
+						};
+					case "UInt":
+						return {
+							none: macro 0,
+							def: macro 0,
+							primitive: true,
+							storage: { pack: ["ecx", "ds"], name: "CInt32Array" }
 						};
 				}
 				throw ("Unhandled Abstract: " + x);
