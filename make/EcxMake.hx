@@ -22,15 +22,15 @@ class EcxMake extends hxmake.Module {
 		apply(IdeaPlugin);
 
 		library(function(ext:HaxelibExt) {
-			ext.config.version = "0.1.0";
-			ext.config.description = "ECX entity-component-system framework";
+			ext.config.version = "0.1.1";
+			ext.config.description = "Haxe Entity System library";
 			ext.config.url = "https://github.com/eliasku/ecx";
 			ext.config.tags = ["entity", "component", "system", "cross"];
 			ext.config.contributors = ["eliasku"];
 			ext.config.license = "MIT";
-			ext.config.releasenote = "API 2.0";
+			ext.config.releasenote = "Fix compatibility";
 
-			ext.pack.includes = ["src", "haxelib.json", "README.md"];
+			ext.pack.includes = ["src", "haxelib.json", "README.md", "CHANGELOG.md"];
 		});
 
 		var testTaskDependencies = new SetupTask();

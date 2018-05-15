@@ -8,12 +8,12 @@
 		"cross"
 	],
 	"classPath": "src",
-	"description": "ECX entity-component-system framework",
+	"description": "Haxe Entity System library",
 	"contributors": [
 		"eliasku"
 	],
-	"releasenote": "API 2.0",
-	"version": "0.1.0",
+	"releasenote": "Fix compatibility",
+	"version": "0.1.1",
 	"url": "https://github.com/eliasku/ecx",
 	"dependencies": {
 		"power-of-two": ""
