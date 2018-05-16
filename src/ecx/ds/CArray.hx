@@ -10,6 +10,8 @@ private typedef CArrayData<T> = java.NativeArray<T>;
 private typedef CArrayData<T> = Array<T>;
 #elseif cs
 private typedef CArrayData<T> = cs.NativeArray<T>;
+#elseif hl
+private typedef CArrayData<T> = hl.NativeArray<T>;
 #else
 private typedef CArrayData<T> = Array<T>;
 #end
@@ -42,6 +44,8 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 		this = new cs.NativeArray<T>(length);
 		#elseif neko
 		this = neko.NativeArray.alloc(length);
+		#elseif hl
+		this = new hl.NativeArray(length);
 		#else
 		this = [for (i in 0...length) null];
 		#end

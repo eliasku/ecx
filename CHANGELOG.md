@@ -4,3 +4,4 @@
 - Remove `power-of-two` dependency
 - C++ unsafe cast for Haxe 4.0 (issue #10)
 - CI scripts updated
+- HashLink target compiles
