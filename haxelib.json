@@ -2,6 +2,7 @@
 	"name": "ecx",
 	"license": "MIT",
 	"tags": [
+		"ecs",
 		"entity",
 		"component",
 		"system",
