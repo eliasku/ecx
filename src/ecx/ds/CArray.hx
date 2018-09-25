@@ -31,7 +31,11 @@ abstract CArray<T>(CArrayData<T>) from CArrayData<T> {
 		#if flash
 		this = new flash.Vector<T>(length, true);
 		#elseif js
+		#if (haxe_ver >= 4)
+		this = js.Syntax.construct(Array, length);
+		#else
 		this = untyped __new__(Array, length);
+		#end
 		for(i in 0...length) this[i] = null;
 //		this = untyped Array.apply(null, __new__(Array, length));
 //		this = untyped __js__("Array.apply(null, new Array({0}))", length);
