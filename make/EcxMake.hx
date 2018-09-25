@@ -18,7 +18,7 @@ class EcxMake extends hxmake.Module {
 		apply(HaxelibPlugin);
 		apply(IdeaPlugin);
 
-		library(function(ext:HaxelibExt) {
+		this.library(function(ext:HaxelibExt) {
 			ext.config.version = "0.1.1";
 			ext.config.description = "Haxe Entity System library";
 			ext.config.url = "https://github.com/eliasku/ecx";

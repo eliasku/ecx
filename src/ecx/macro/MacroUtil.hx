@@ -2,11 +2,8 @@ package ecx.macro;
 
 #if macro
 
-import ecx.macro.EnumTools;
 import haxe.macro.Type;
 import haxe.macro.Expr;
-
-using ecx.macro.EnumTools;
 
 @:final
 class MacroUtil {

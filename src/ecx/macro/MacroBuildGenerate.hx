@@ -18,10 +18,10 @@ class MacroBuildGenerate {
     }
 
     static function process(types:Array<Type>) {
-        var metaAccess:MetaAccess = EnumTools.extract(
-			Context.getType("ecx.types.TypeManager"),
-			Type.TInst(cl, _) => cl.get().meta
-		);
+        var metaAccess:MetaAccess = switch(Context.getType("ecx.types.TypeManager")) {
+        	case Type.TInst(cl, _): cl.get().meta;
+        	default: throw "type not found";
+		};
 
         var exprs = [];
         for(systemData in MacroServiceCache.cache) {

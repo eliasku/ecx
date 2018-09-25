@@ -108,7 +108,10 @@ class SystemBuilder {
 	static function searchUpdate(fields:Array<Field>):Null<Field> {
 		for(field in fields) {
 			if(field.name == "update") {
-				return EnumTools.extract(field.kind, FieldType.FFun(_) => field);
+				switch(field.kind) {
+					case FFun(_): return field;
+					default:
+				}
 			}
 		}
 		return null;

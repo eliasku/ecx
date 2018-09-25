@@ -45,7 +45,6 @@ class World {
 
 	// components
 	var _components:ComponentTable;
-	var _activators:CArray<IComponent>;
 
 	// services
 	var _services:CArray<Service>;
