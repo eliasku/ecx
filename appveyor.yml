@@ -5,9 +5,10 @@ environment:
     HAXELIB_ROOT: C:\projects\haxelib
   matrix:
     - TARGET: js,node
+    - TARGET: hl,neko
     - TARGET: cpp
     - TARGET: cs,java
-    - TARGET: neko,flash
+    - TARGET: flash
 
 matrix:
   fast_finish: true
