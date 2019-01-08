@@ -22,7 +22,7 @@ Libraries (work in progress):
 
 ### Initialization
 
-```
+```haxe
 var config = new WorldConfig([...]);
 var world = Engine.createWorld(config, ?capacity);
 ```
@@ -40,7 +40,8 @@ All services are known at world creation. World provides possibility to resolve 
 Each service could have dependencies on different services. With `Wire<T:Service>` you could inject your dependencies to instance fields.
 
 For example we need to inject TimeSystem system to our MovementSystem
-```
+
+```haxe
 class MovementSystem extends System {
     var _time:Wire<TimeSystem>;
     ...
@@ -55,7 +56,8 @@ class MovementSystem extends System {
 
 For all `System` types.
 For example we need to track all active(live) entities with components: Transform, Node and Renderable.
-```
+
+```haxe
 class MovementSystem extends System {
     var _entities:Family<Transform, Node, Renderable>;
     ...
@@ -72,7 +74,8 @@ class MovementSystem extends System {
 Sometimes it could be useful to mark some optional component in Family declaration just for readability.
 You can wrap each optional Component type in parentheses `()` and it will be ignored by Family, but
 will be notated.
-```
+
+```haxe
 var _entities:Family<Transform, Node, Renderable, (Scissors)>;
 ```
 
@@ -85,7 +88,7 @@ var _entities:Family<Transform, Node, Renderable, (Scissors)>;
 
 Component is a way to associate [data] per `Entity`. You could just use component-builders to define your own components.
 
-```
+```haxe
 class Position extends AutoComp<Point> {}
 
 /// later just use it like Point class per entity
@@ -93,7 +96,8 @@ _position.get(entity).x = 10;
 ```
 
 Or you could create any custom crazy ComponentStorage / ComponentManager.
-```
+
+```haxe
 class Color extends Service implements Component {
     // BitmapData is used just to demonstrate that you are not limited to anything to store <component data> per <entity>
     // Each pixel is color for entity
