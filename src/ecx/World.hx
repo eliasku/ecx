@@ -9,10 +9,9 @@ import ecx.ds.CInt32RingBuffer;
 import ecx.managers.WorldConstructor;
 import ecx.types.EntityVector;
 import ecx.types.FamilyData;
-import haxe.macro.Expr.ExprOf;
 
 #if ecx_debug
-using ecx.managers.WorldDebug;
+import ecx.managers.WorldDebug.*;
 #end
 
 /**
@@ -133,7 +132,7 @@ class World {
 	**/
 	public function destroy(entity:Entity) {
 		#if ecx_debug
-		guardEntity(entity);
+		guardEntity(this, entity);
 		#end
 		if(_removedMask.enableIfNot(entity.id)) {
 			_removedVector.place(entity);
@@ -145,7 +144,7 @@ class World {
 	**/
 	public function invalidate() {
 		#if ecx_debug
-		makeFamiliesMutable();
+		makeFamiliesMutable(this);
 		#end
 
 		if(_removedVector.length > 0 || _changedVector.length > 0) {
@@ -155,8 +154,8 @@ class World {
 		}
 
 		#if ecx_debug
-		guardFamilies();
-		makeFamiliesImmutable();
+		guardFamilies(this);
+		makeFamiliesImmutable(this);
 		#end
 	}
 
@@ -165,7 +164,7 @@ class World {
 	**/
 	public function activate(entity:Entity) {
 		#if ecx_debug
-		guardEntity(entity);
+		guardEntity(this, entity);
 		if(_activeMask.get(entity.id)) throw 'This entity is already active';
 		#end
 		_activeMask.enable(entity.id);
@@ -177,7 +176,7 @@ class World {
 	**/
 	public function deactivate(entity:Entity) {
 		#if ecx_debug
-		guardEntity(entity);
+		guardEntity(this, entity);
 		if(!_activeMask.get(entity.id)) throw "This entity is already inactive";
 		#end
 		_activeMask.disable(entity.id);
@@ -359,7 +358,7 @@ class World {
 
 	function markEntityAsChanged(entity:Entity) {
 		#if ecx_debug
-		guardEntity(entity);
+		guardEntity(this, entity);
 		#end
 		if(_changedMask.enableIfNot(entity.id)) {
 			_changedVector.place(entity);
