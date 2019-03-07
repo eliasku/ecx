@@ -34,7 +34,8 @@ class EcxMake extends hxmake.Module {
 		testTask.debug = true;
 		testTask.targets = ["neko", "swf", "node", "js", "cpp", "java", "cs"];
 		testTask.libraries = ["ecx"];
-		testTask.defines.push("eval-stack", "ecx_debug");
+		testTask.defines.push("eval-stack");
+		testTask.defines.push("ecx_debug");
 		task("test", testTask);
 	}
 }
