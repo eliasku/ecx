@@ -48,7 +48,6 @@ class FieldsBuilder {
                     }
                     metas = [];
                 case ExprDef.EFunction(name, f):
-                    trace(name);
                     fields.push({
                         name: getFieldName(Std.string(name)),
                         doc: null,
@@ -66,8 +65,8 @@ class FieldsBuilder {
 
     static function getAccess(name:String):Array<Access> {
         var result = [];
-        var remFNAME = name.split('(');
-        for (token in remFNAME[remFNAME.length-1].split('_X')) {
+        var remFNamed = name.split('(');
+        for (token in remFNamed[remFNamed.length-1].split('_X')) {
             var access = switch (token) {
                 case "public": Access.APublic;
                 case "private": Access.APrivate;
