@@ -3,6 +3,7 @@ package ecx.macro;
 #if macro
 
 import haxe.macro.Expr;
+import Std;
 
 @:final
 class FieldsBuilder {
@@ -48,9 +49,9 @@ class FieldsBuilder {
                     metas = [];
                 case ExprDef.EFunction(name, f):
                     fields.push({
-                        name: getFieldName(name),
+                        name: getFieldName(Std.string(name)),
                         doc: null,
-                        access: getAccess(name),
+                        access: getAccess(Std.string(name)),
                         kind: FieldType.FFun(f),
                         pos: f.expr.pos,
                         meta: metas
@@ -64,7 +65,8 @@ class FieldsBuilder {
 
     static function getAccess(name:String):Array<Access> {
         var result = [];
-        for (token in name.split("_X")) {
+        var remFNamed = name.split('(');
+        for (token in remFNamed[remFNamed.length-1].split('_X')) {
             var access = switch (token) {
                 case "public": Access.APublic;
                 case "private": Access.APrivate;
@@ -83,7 +85,8 @@ class FieldsBuilder {
 
     static function getFieldName(name:String):String {
         var parts = name.split("_X");
-        return parts[parts.length - 1];
+        var parts = parts[parts.length - 1].split(",");
+        return parts[0];
     }
 }
 
